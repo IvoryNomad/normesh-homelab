@@ -1,0 +1,10 @@
+# ignore virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ignore environment config files
+.env
+.env.*
