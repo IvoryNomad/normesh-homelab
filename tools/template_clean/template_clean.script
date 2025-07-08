@@ -1,0 +1,164 @@
+# Print to stderr
+echoerr() {
+  echo "$@" 1>&2
+}
+
+# Show help message
+show_help() {
+  echo "$(basename "$0"): Reset template for cloning"
+  echo "  -h       show this help"
+  echo "  -n       do not halt vm (default is to halt)"
+  echo "  -r       reboot vm (will not halt irrespective of whether -n is specified)"
+  echo ""
+  echo "NB: set the environment variable 'CLOUD_USER' to the desired username if"
+  echo "    'cloud-user' is not correct"
+  echo "NB: removes /etc/sudoers.d/90-cloud-init-users to allow cloud-init to recreate it"
+  echo "NB: must be run as the root user (or via sudo)"
+}
+
+# Check if running as root
+if [ "$(id -u)" -ne 0 ]; then
+  echoerr "ERROR: This script must be run as the root user or via sudo"
+  exit 1
+fi
+# Optional: Enforce actual root login (uncomment to use)
+# if [ -n "$SUDO_USER" ]; then
+#   echoerr "ERROR: This script must be run as the root user (e.g., via 'su -' or direct root login), not via sudo"
+#   exit 1
+# fi
+
+# Check write permissions for sudoers.d
+if [ ! -w /etc/sudoers.d ]; then
+  echoerr "ERROR: No write permission to /etc/sudoers.d"
+  exit 1
+fi
+
+# Default cloud-init user (can be overridden via environment variable)
+LOCALUSER=${CLOUD_USER:-cloud-user}
+LOCALUSERHOME=""
+
+# Try to determine user's home directory
+if command -v getent >/dev/null; then
+  LOCALUSERHOME=$(getent passwd "$LOCALUSER" | cut -d: -f6)
+fi
+if [ -z "$LOCALUSERHOME" ]; then
+  echoerr "WARNING: Could not determine home directory for user $LOCALUSER"
+fi
+
+SHUTDOWN=YES
+REBOOT=NO
+
+# Process command-line arguments
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h)
+      show_help
+      exit 0
+      ;;
+    -n)
+      SHUTDOWN=NO
+      ;;
+    -r)
+      REBOOT=YES
+      SHUTDOWN=NO
+      ;;
+    *)
+      echoerr "ERROR: Unknown option $1"
+      show_help
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+# Configure sudoers for the user, if applicable
+if [ -n "$LOCALUSER" ] && [ -n "$LOCALUSERHOME" ]; then
+  # Set sudo defaults for $LOCALUSER
+  SUDO_LOCALUSER_DEFAULTS_FILE="/etc/sudoers.d/89-$LOCALUSER-defaults"
+  if [ -f "$SUDO_LOCALUSER_DEFAULTS_FILE" ]; then
+    echoerr "WARNING: $SUDO_LOCALUSER_DEFAULTS_FILE already exists, backing up to /root/89-$LOCALUSER-defaults.bak"
+    cp "$SUDO_LOCALUSER_DEFAULTS_FILE" "/root/89-$LOCALUSER-defaults.bak" || {
+      echoerr "ERROR: Failed to back up $SUDO_LOCALUSER_DEFAULTS_FILE"
+      exit 1
+    }
+  fi
+  # sanity check on username
+  case "$LOCALUSER" in
+    *[!\ a-zA-Z0-9_-]*)
+      echoerr "ERROR: Invalid username '$LOCALUSER' for sudoers"
+      exit 1
+      ;;
+  esac
+  # Write sudoers file and check exit status separately
+  cat > "$SUDO_LOCALUSER_DEFAULTS_FILE" <<EOF
+Defaults:$LOCALUSER env_keep += "http_proxy https_proxy ftp_proxy all_proxy no_proxy"
+Defaults:$LOCALUSER env_keep += "EDITOR"
+Defaults:$LOCALUSER env_keep += "GREP_COLOR"
+Defaults:$LOCALUSER env_keep += "GIT_AUTHOR_* GIT_COMMITTER_*"
+Defaults:$LOCALUSER env_keep += "EMAIL DEBEMAIL DEBFULLNAME"
+Defaults:$LOCALUSER env_keep += "SSH_AGENT_PID SSH_AUTH_SOCK"
+Defaults:$LOCALUSER env_keep += "GPG_AGENT_INFO"
+EOF
+  if [ $? -ne 0 ]; then
+    echoerr "ERROR: Failed to write $SUDO_LOCALUSER_DEFAULTS_FILE"
+    exit 1
+  fi
+  # sanity check on created sudoers file
+  if command -v visudo >/dev/null; then
+    visudo -c -f "$SUDO_LOCALUSER_DEFAULTS_FILE" || {
+      echoerr "ERROR: Invalid syntax in $SUDO_LOCALUSER_DEFAULTS_FILE"
+      exit 1
+    }
+  fi
+  # Clean cloud-init user's history file
+  if [ -d "$LOCALUSERHOME" ]; then
+    su "$LOCALUSER" -c "cat /dev/null > \"$LOCALUSERHOME/.bash_history\"" || {
+      echoerr "ERROR: Failed to clear $LOCALUSERHOME/.bash_history"
+      exit 1
+    }
+  fi
+fi
+
+# Clear machine IDs
+cat /dev/null > /etc/machine-id || {
+  echoerr "ERROR: Failed to clear /etc/machine-id"
+  exit 1
+}
+cat /dev/null > /var/lib/dbus/machine-id || {
+  echoerr "ERROR: Failed to clear /var/lib/dbus/machine-id"
+  exit 1
+}
+
+# Run cloud-init clean if available
+if command -v cloud-init >/dev/null; then
+  cloud-init clean || {
+    echoerr "ERROR: cloud-init clean failed"
+    exit 1
+  }
+else
+  echoerr "WARNING: cloud-init not found, skipping clean"
+fi
+
+# Remove cloud-init sudoers file so it can be recreated
+SUDO_CLOUD_INIT_FILE="/etc/sudoers.d/90-cloud-init-users"
+if [ -f "$SUDO_CLOUD_INIT_FILE" ]; then
+  echoerr "WARNING: Removing $SUDO_CLOUD_INIT_FILE to allow recreation by cloud-init"
+  rm -f "$SUDO_CLOUD_INIT_FILE" || {
+    echoerr "ERROR: Failed to remove $SUDO_CLOUD_INIT_FILE"
+    exit 1
+  }
+fi
+
+# Clear root's bash history
+if [ -f /root/.bash_history ]; then
+  history -w ~/.bash_history
+fi
+
+# Handle reboot or shutdown
+if [ "$REBOOT" = YES ]; then
+  reboot
+elif [ "$SHUTDOWN" = YES ]; then
+  shutdown -h now
+fi
+
+exit 0
