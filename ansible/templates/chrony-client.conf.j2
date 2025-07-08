@@ -23,15 +23,15 @@ log measurements statistics tracking
 # Stop bad estimates upsetting machine clock.
 maxupdateskew 100.0
 
-# Keep the RTC synced within 60s
-# TODO enable this section on bare metal installs
-# rtcautotrim 60
-# rtcfile /var/lib/chrony/rtc
-
+{% if ansible_virtualization_type == "lxc" %}
 # This directive enables kernel synchronisation (every 11 minutes) of the
 # real-time clock. Note that it can't be used along with the 'rtcfile' directive.
-# enable this section on VMs
 rtcsync
+{% else %}
+# Keep the RTC synced within 60s
+rtcautotrim 60
+rtcfile /var/lib/chrony/rtc
+{% endif %}
 
 # Allow the system clock to be stepped in the first three updates
 # if its offset is larger than 1 second.
