@@ -1,0 +1,66 @@
+---
+- name: Install chrony
+  hosts: ipaserver,ipareplica
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Install chrony
+      ansible.builtin.package:
+        name: chrony
+        state: present
+
+- name: Configure chrony server
+  hosts: ipaserver,ipareplica
+  become: true
+
+  tasks:
+    - name: "Enable chronyd to run in a container"
+      block:
+        - name: "Create systemd override directory for chronyd"
+          ansible.builtin.file:
+            path: /etc/systemd/system/chronyd.service.d
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+
+        - name: "Create chronyd override file"
+          ansible.builtin.blockinfile:
+            path: /etc/systemd/system/chronyd.service.d/override.conf
+            create: true
+            owner: root
+            group: root
+            mode: '0644'
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - ENABLE LXC #"
+            block: |
+              [Service]
+              ExecStart=
+              ExecStart=/usr/sbin/chronyd -x $OPTIONS
+          notify:
+            - Reload systemd daemon
+            - Restart chrony
+
+      when: ansible_virtualization_type | default("unset") == "lxc"
+
+    - name: Install chrony keyfile
+      ansible.builtin.template:
+        src: chrony-keys.j2
+        dest: /etc/chrony.keys
+        owner: root
+        group: chrony
+        mode: '0640'
+      notify: Restart chrony
+
+    - name: Install chrony server configuration
+      ansible.builtin.template:
+        src: chrony-server.conf.j2
+        dest: /etc/chrony.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart chrony
+
+  handlers:
+    - name: Restart services
+      ansible.builtin.import_tasks: handlers/restarts.yml

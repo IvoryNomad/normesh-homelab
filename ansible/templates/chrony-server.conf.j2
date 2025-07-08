@@ -1,0 +1,45 @@
+# Welcome to the chrony configuration file. See chrony.conf(5) for more
+# information about usable directives.
+# This file created by {{ lookup('env', 'USER') }} via Ansible
+
+# servers
+server ntp.iad.cryptobloks.io iburst
+server ntp-1.vt.edu iburst
+server ntp-2.vt.edu iburst
+server tick.jrc.us iburst
+server time-d.bbnx.net iburst
+
+# client networks
+allow 172.31.254.0/23
+allow 192.168.224.0/19
+allow 2001:470:8:289::/64
+allow 2001:470:e0fc::/48
+
+keyfile /etc/chrony.keys
+
+driftfile /var/lib/chrony/drift
+
+# Save NTS keys and cookies.
+ntsdumpdir /var/lib/chrony
+
+# Log files location.
+logdir /var/log/chrony
+
+# Select which information is logged.
+log measurements statistics tracking
+
+# Stop bad estimates upsetting machine clock.
+maxupdateskew 100.0
+
+{% if ansible_virtualization_type != "lxc" %}
+# Keep the RTC synced within 60s
+rtcautotrim 60
+rtcfile /var/lib/chrony/rtc
+{% endif %}
+
+# Allow the system clock to be stepped in the first three updates
+# if its offset is larger than 1 second.
+makestep 1.0 3
+
+# Get TAI-UTC offset and leap seconds from the system tz database.
+leapsectz right/UTC

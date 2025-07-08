@@ -1,0 +1,76 @@
+---
+- name: Install chrony
+  hosts: all
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Install chrony
+      ansible.builtin.package:
+        name: chrony
+        state: present
+
+- name: Configure chrony client
+  hosts: all,!ipaserver,!ipareplica
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Set correct chrony configuration directory - RHEL/Fedora
+      ansible.builtin.set_fact:
+        chrony_conf_dir: /etc
+      when: ansible_os_family == 'RedHat'
+
+    - name: Set correct chrony configuration directory - Debian/Ubuntu
+      ansible.builtin.set_fact:
+        chrony_conf_dir: /etc/chrony
+      when: ansible_os_family == 'Debian'
+
+    - name: "Enable chronyd to run in a container"
+      block:
+        - name: "Create systemd override directory for chronyd"
+          ansible.builtin.file:
+            path: /etc/systemd/system/chronyd.service.d
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+
+        - name: "Create chronyd override file"
+          ansible.builtin.blockinfile:
+            path: /etc/systemd/system/chronyd.service.d/override.conf
+            create: true
+            owner: root
+            group: root
+            mode: '0644'
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - ENABLE LXC #"
+            block: |
+              [Service]
+              ExecStart=
+              ExecStart=/usr/sbin/chronyd -x $OPTIONS
+          notify:
+            - Reload systemd daemon
+            - Restart chrony
+
+        - name: Flush handlers
+          meta: flush_handlers
+
+      when: ansible_virtualization_type | default("unset") == "lxc"
+
+    - name: Install chrony client configuration
+      ansible.builtin.template:
+        src: chrony-client.conf.j2
+        dest: "{{ (chrony_conf_dir, 'chrony.conf') | path_join }}"
+        owner: root
+        group: root
+        mode: '0644'
+      vars:
+        ntp_servers:
+          - "ipa1.ipa.norme.sh"
+          - "ipa2.ipa.norme.sh"
+          - "ipa3.ipa.norme.sh"
+      notify: Restart chrony
+
+  handlers:
+    - name: Restart services
+      ansible.builtin.import_tasks: handlers/restarts.yml
