@@ -1,0 +1,25 @@
+#!/bin/sh
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --vault-id)
+      if [ -n "$VAULT_ID" ]; then
+        echo "Error: --vault-id specified more than once" >&2
+        exit 1
+      fi
+      VAULT_ID="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$VAULT_ID" ]; then
+  echo "Error: --vault-id not provided" >&2
+  exit 1
+fi
+
+PASSWD=$(op_wrapper item get "ansible_${VAULT_ID}" --vault CICD-homelab --fields password --reveal)
+echo "$PASSWD"
