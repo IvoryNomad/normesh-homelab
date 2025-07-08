@@ -1,0 +1,24 @@
+---
+- name: Scan and add SSH host keys
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Get effective host address
+      ansible.builtin.set_fact:
+        effective_host: "{{ ansible_host | default(inventory_hostname) }}"
+    - name: Scan host keys
+      delegate_to: localhost
+      ansible.builtin.command: ssh-keyscan {{ effective_host }}
+      register: keyscan
+      changed_when: false
+      ignore_errors: true
+    - name: Add host keys to known_hosts
+      delegate_to: localhost
+      ansible.builtin.known_hosts:
+        # Use inventory_hostname as the name to match Ansible's inventory
+        name: "{{ effective_host }}"
+        # But use ansible_host for the actual key if defined
+        key: "{{ item }}"
+        state: present
+      with_items: "{{ keyscan.stdout_lines }}"
+      when: keyscan.stdout_lines is defined
