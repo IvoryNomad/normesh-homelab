@@ -1,5 +1,3 @@
-# normesh-homelab
-Normesh home lab creation and configuration
 # Normesh Home lab
 This repository contains infrastructure as code (IaC), tooling,
 configuration data, and other associated code needed to stand up my
