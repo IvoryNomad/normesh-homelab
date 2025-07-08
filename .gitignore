@@ -8,3 +8,6 @@ venv.bak/
 # ignore environment config files
 .env
 .env.*
+
+# ignore ansible detection files
+.ansible-*
