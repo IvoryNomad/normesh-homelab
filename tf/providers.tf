@@ -3,7 +3,7 @@ provider "freeipa" {
   host     = "idm2.idm.norme.sh"
   username = data.external.tofu_idm_api_creds.result.username
   password = data.external.tofu_idm_api_creds.result.password
-  insecure = var.pm_tls_insecure
+  insecure = true
 }
 
 provider "incus" {
