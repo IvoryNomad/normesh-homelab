@@ -1,0 +1,106 @@
+---
+- name: Perform pre-install tasks
+  hosts: ipaserver,ipareplica
+  tags:
+    - default
+    - install
+
+  tasks:
+    - name: Import pre-install tasks
+      ansible.builtin.import_tasks: tasks/freeipa-pre-install.yml
+
+- name: Import chrony-server playbook
+  # TODO: make this a role and call from the play above
+  tags:
+    - default
+    - chrony
+    - install
+  ansible.builtin.import_playbook: chrony-server.yml
+
+- name: Reboot device
+  hosts: ipaserver,ipareplica
+  become: true
+  tags: reboot
+
+  tasks:
+    - name: Reboot for install
+      ansible.builtin.reboot:
+
+- name: Install and configure IPA servers
+  hosts: ipaserver
+  become: true
+  gather_facts: true
+  tags:
+    - default
+    - install
+
+  pre_tasks:
+    - name: Fix /etc/resolv.conf
+      ansible.builtin.copy:
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |-
+          search ipa.norme.sh
+          nameserver 192.168.225.6
+          nameserver 192.168.225.7
+
+  roles:
+    - role: ipaserver
+      state: present # noqa var-naming[no-role-prefix]
+
+- name: Install and configure IPA replicas
+  hosts: ipareplica
+  become: true
+  gather_facts: true
+  tags:
+    - default
+    - install
+
+  roles:
+    - role: ipareplica
+      state: present # noqa var-naming[no-role-prefix]
+
+- name: Backup IPA server to controller
+  hosts: ipaserver
+  become: true
+  tags: backup
+
+  vars:
+    ipabackup_to_controller: yes
+    ipabackup_keep_on_server: yes
+    ipabackup_controller_path: "{{ (inventory_dir, 'ipabackup') | path_join }}"
+
+  pre_tasks:
+    - name: Ensure backup folder exists
+      delegate_to: localhost
+      become: false
+      ansible.builtin.file:
+        path: "{{ ipabackup_controller_path }}"
+        state: directory
+        mode: '0700'
+
+    - name: Add backup folder to .gitignore
+      delegate_to: localhost
+      become: false
+      ansible.builtin.blockinfile:
+        path: "{{ (inventory_dir, '.gitignore') | path_join }}"
+        create: true
+        mode: '0644'
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - IGNORE IPA BACKUPS #"
+        # prepend_newline: true
+        block: "ipabackup/"
+
+  roles:
+    - role: ipabackup
+      state: present
+
+- name: Remove IPA replicas
+  hosts: ipareplica
+  become: true
+  tags: remove_replica
+
+  roles:
+    - role: ipareplica
+      state: absent # noqa var-naming[no-role-prefix]
