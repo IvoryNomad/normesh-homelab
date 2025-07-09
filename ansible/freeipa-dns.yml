@@ -1,0 +1,67 @@
+---
+- name: Ensure freeipa server/replicas can provide network wide DNS services
+  hosts: ipaserver,ipareplica
+  become: true
+  gather_facts: true
+  tags:
+    - default
+    - install
+    - dns_conffiles
+  
+  tasks:
+    - name: Include DNS variables
+      ansible.builtin.include_vars:
+        file: vars/create_dns.yml
+        name: cfg
+
+    - name: Fix DNS conffiles
+      ansible.builtin.include_tasks:
+        file: tasks/freeipa-fix-dns-conffiles.yml
+      vars:
+        allowed_networks: "{{ cfg.allowed_networks }}"
+      loop: "{{ cfg.bind_conffiles }}"
+
+  handlers:
+    - name: Restart commands
+      ansible.builtin.import_tasks: handlers/commands.yml
+
+    - name: Restart services
+      ansible.builtin.import_tasks: handlers/restarts.yml
+
+- name: Perform initial configuration of freeipa DNS
+  hosts: ipaserver
+  become: true
+  tags:
+    - default
+    - install
+    - create_dns
+
+  tasks:
+    - name: Include DNS variables
+      ansible.builtin.include_vars:
+        file: vars/create_dns.yml
+        name: cfg
+
+    - name: Create forward zones
+      ipadnszone:
+        state: present
+        name: "{{ item }}"
+      loop: "{{ cfg.ipa_forward_zones }}"
+
+    - name: Create reverse zones
+      ipadnszone:
+        state: present
+        name_from_ip: "{{ item }}"
+      loop: "{{ cfg.ipa_reverse_addresses }}"
+
+    - name: Create DNS RRs
+      ipadnsrecord:
+        ipaadmin_principal: "{{ cfg.ipaadmin_principal }}"
+        ipaadmin_password: "{{ cfg.ipaadmin_password }}"
+        zone_name: "{{ item.0.key }}"
+        name: "{{ item.1.name }}"
+        state: "{{ item.1.state }}"
+        record_type: "{{ item.1.record_type }}"
+        record_value: "{{ item.1.record_value }}"
+      loop: "{{ cfg.ipa_dns_records | dict2items | subelements('value') }}"
+
