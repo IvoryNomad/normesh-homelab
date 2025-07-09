@@ -1,0 +1,36 @@
+---
+- name: Pre install tasks
+  tags:
+    - default
+    - install
+  ansible.builtin.import_playbook: freeipa-common.yml
+
+- name: Import chrony-client playbook
+  tags:
+    - default
+    - chrony
+    - install
+  ansible.builtin.import_playbook: chrony-client.yml
+
+- name: Install and configure IPA client
+  hosts: ipaclient
+  become: true
+  gather_facts: true
+  tags:
+    - default
+    - install
+
+  roles:
+    - role: ipaclient
+      state: present # noqa var-naming[no-role-prefix]
+
+- name: Remove IPA client
+  hosts: ipaclient
+  become: true
+  gather_facts: true
+  tags:
+    - remove
+
+  roles:
+    - role: ipaclient
+      state: absent # noqa var-naming[no-role-prefix]
