@@ -1,0 +1,35 @@
+---
+- name: Configure freeipa AAA and identity
+  hosts: ipaserver
+  become: true
+  tags:
+    - default
+    - install
+    - create_roles
+
+  vars:
+    ipaadmin_creds: "{{ lookup('onepassword', 'op://CICD-homelab/ipaadmin/password', use_dotenv=true, dotenv_path='~localadmin/homelab-iac/.env') }}"
+
+    roles:
+      - name: "host-admin"
+        state: present
+        privilege:
+          - 'Host Administrators'
+        description: 'Can add and enroll hosts'
+
+  tasks:
+    - name: Include auth and identify variables
+      ansible.builtin.include_vars:
+        file: vars/auth_identity.yml
+        name: cfg
+
+    - name: Create roles
+      iparole:
+        ipaadmin_password: "{{ ipaadmin_creds }}"
+        name: "{{ item.name }}"
+        state: "{{ item.state }}"
+        privilege: "{{ item.privilege | default(omit) }}"
+        description: "{{ item.description | default(omit) }}"
+      loop: "{{ roles }}"
+
+#   - name: Create hostgroups
