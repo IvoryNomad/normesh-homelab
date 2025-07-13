@@ -34,15 +34,3 @@ variable "deb_template_id" {
   type        = number
   default     = 9000
 }
-
-variable "minio_ip" {
-  description = "Static IP for MinIO VM"
-  type        = string
-  default     = "192.168.225.127"
-}
-
-variable "minio_ssh_pubkey" {
-  description = "SSH public key for localadmin user in MinIO LXC"
-  type        = string
-  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEyNrTnL2Q28La52c4oSg+ZACVuK8U64/FbNPXxdlzSc localadmin@pve-lab"
-}
