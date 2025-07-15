@@ -1,0 +1,33 @@
+- name: Reload systemd daemon
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart chrony
+  ansible.builtin.service:
+    name: chronyd
+    state: restarted
+
+- name: Restart NFS server
+  ansible.builtin.service:
+    name: nfs-server
+    state: restarted
+
+- name: Restart OpenAFS client
+  ansible.builtin.service:
+    name: openafs-client
+    state: restarted
+
+- name: Restart SSSD
+  ansible.builtin.service:
+    name: sssd
+    state: restarted
+
+- name: Restart SSH daemon
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+
+- name: Restart systemd-sysctl
+  ansible.builtin.systemd:
+    name: systemd-sysctl
+    state: restarted

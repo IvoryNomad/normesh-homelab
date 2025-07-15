@@ -1,0 +1,14 @@
+- name: Restart DNS service
+  ansible.builtin.command:
+    argv:
+      - rndc
+      - reload
+
+- name: Reload NFS exports
+  ansible.builtin.command:
+    cmd: "exportfs -ra"
+
+- name: Update PAM configuration
+  # N.B. Debian dependent
+  ansible.builtin.command:
+    cmd: "pam-auth-update --package"
