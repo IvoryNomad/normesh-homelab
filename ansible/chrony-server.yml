@@ -1,6 +1,6 @@
 ---
 - name: Install chrony
-  hosts: ipaserver,ipareplica
+  hosts: incus_cluster0_pri,incus_cluster0_sec
   gather_facts: true
   become: true
 
@@ -11,10 +11,21 @@
         state: present
 
 - name: Configure chrony server
-  hosts: ipaserver,ipareplica
+  hosts: incus_cluster0_pri,incus_cluster0_sec
   become: true
 
   tasks:
+    - name: Set correct chrony configuration directory - RHEL/Fedora
+      ansible.builtin.set_fact:
+        chrony_conf_dir: /etc
+        chrony_group: 'chrony'
+      when: ansible_os_family == 'RedHat'
+
+    - name: Set correct chrony configuration directory - Debian/Ubuntu
+      ansible.builtin.set_fact:
+        chrony_conf_dir: /etc/chrony
+        chrony_group: '_chrony'
+      when: ansible_os_family == 'Debian'
     - name: "Enable chronyd to run in a container"
       block:
         - name: "Create systemd override directory for chronyd"
@@ -46,16 +57,16 @@
     - name: Install chrony keyfile
       ansible.builtin.template:
         src: chrony-keys.j2
-        dest: /etc/chrony.keys
+        dest: "{{ (chrony_conf_dir, 'chrony.keys') | path_join }}"
         owner: root
-        group: chrony
+        group: "{{ chrony_group }}"
         mode: '0640'
       notify: Restart chrony
 
     - name: Install chrony server configuration
       ansible.builtin.template:
         src: chrony-server.conf.j2
-        dest: /etc/chrony.conf
+        dest: "{{ (chrony_conf_dir, 'chrony.conf') | path_join }}"
         owner: root
         group: root
         mode: '0644'

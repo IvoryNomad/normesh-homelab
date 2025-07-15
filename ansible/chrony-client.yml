@@ -1,6 +1,6 @@
 ---
 - name: Install chrony
-  hosts: all
+  hosts: all,!incus_cluster0_pri,!incus_cluster0_sec
   gather_facts: true
   become: true
 
@@ -11,7 +11,7 @@
         state: present
 
 - name: Configure chrony client
-  hosts: all,!ipaserver,!ipareplica
+  hosts: all,!incus_cluster0_pri,!incus_cluster0_sec
   gather_facts: true
   become: true
 
@@ -66,9 +66,9 @@
         mode: '0644'
       vars:
         ntp_servers:
-          - "ipa1.ipa.norme.sh"
-          - "ipa2.ipa.norme.sh"
-          - "ipa3.ipa.norme.sh"
+          - "192.168.225.32"
+          - "192.168.225.33"
+          - "192.168.225.34"
       notify: Restart chrony
 
   handlers:
