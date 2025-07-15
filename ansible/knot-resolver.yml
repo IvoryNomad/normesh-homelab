@@ -1,0 +1,89 @@
+---
+- name: Install knot-resolver
+  hosts: incus_cluster0_pri,incus_cluster0_sec
+  gather_facts: true
+  become: true
+
+  vars:
+    knot_services:
+      - kres-cache-gc
+      - kresd@dns1
+      - kresd@dns2
+
+  tasks:
+    - name: Gather mount facts
+      ansible.builtin.mount_facts:
+
+    - name: Register if /var/cache/knot-resolver is tmpfs
+      ansible.builtin.set_fact:
+        is_tmpfs_mounted: "{{ '/var/cache/knot-resolver' in ansible_facts.mounts | selectattr('mount', 'equalto', '/var/cache/knot-resolver') | map(attribute='fstype') | list and 'tmpfs' in ansible_facts.mounts | selectattr('mount', 'equalto', '/var/cache/knot-resolver') | map(attribute='fstype') | list }}"
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Stop service if running
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        state: stopped
+      loop: "{{ knot_services }}"
+      when: not is_tmpfs_mounted and ansible_facts.services[item] is defined and ansible_facts.services[item].state == 'running'
+
+    - name: Clean cache directory
+      ansible.builtin.file:
+        path: /var/cache/knot-resolver
+        state: absent
+      when: not is_tmpfs_mounted
+
+    - name: Ensure cache directory exists
+      ansible.builtin.file:
+        path: /var/cache/resolver
+        state: directory
+        mode: '0755'
+      when: not is_tmpfs_mounted
+
+    - name: Mount cache filesystem
+      ansible.posix.mount:
+        path: /var/cache/knot-resolver
+        src: tmpfs
+        fstype: tmpfs
+        opts: "rw,size=256M,uid=knot-resolver,gid=knot-resolver,nosuid,nodev,noexec,mode=0700"
+        state: mounted
+      when: not is_tmpfs_mounted
+
+    - name: Enable cznic-labs repository
+      block:
+        - name: Install dependencies
+          ansible.builtin.package:
+            name:
+              - apt-transport-https
+              - ca-certificates
+            state: present
+
+        - name: Add cznic-labs GPG key
+          ansible.builtin.get_url:
+            url: https://pkg.labs.nic.cz/gpg
+            dest: /usr/share/keyrings/cznic-labs-pkg.gpg
+            checksum: "sha256:e82408f6c31b994e896f9c4244fa73bf92a10435289cab1f5ef5b619adae6482"
+            mode: '0644'
+            owner: root
+            group: root
+
+        - name: Add cznic-labs repository
+          ansible.builtin.apt_repository:
+            filename: cznic-labs-knot-resolver
+            repo: "deb [signed-by=/usr/share/keyrings/cznic-labs-pkg.gpg] https://pkg.labs.nic.cz/knot-resolver bookworm main"
+            state: present
+            install_python_apt: true
+            update_cache: true
+
+    - name: Install knot-resolver
+      ansible.builtin.package:
+        name: knot-resolver
+        state: present
+
+    - name: Enable and start services
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop: "{{ knot_services }}"
