@@ -1,0 +1,50 @@
+---
+ipaclient:
+  hosts:
+    alma-mgmt.ipa.norme.sh:
+      ansible_host: 192.168.226.64
+      ansible_user: localadmin
+ipaserver:
+  hosts:
+    ipa1.ipa.norme.sh:
+      ansible_host: 192.168.226.2
+      ansible_user: localadmin
+ipareplica:
+  hosts:
+    ipa2.ipa.norme.sh:
+      ansible_host: 192.168.226.3
+      ansible_user: localadmin
+    ipa3.ipa.norme.sh:
+      ansible_host: 192.168.226.4
+      ansible_user: localadmin
+incus_server:
+  hosts:
+    vmhost0.ipa.norme.sh:
+      ansible_user: localadmin
+      ansible_host: 192.168.225.31
+    vmhost1.ipa.norme.sh:
+      ansible_user: localadmin
+      ansible_host: 192.168.225.32
+    vmhost2.ipa.norme.sh:
+      ansible_user: localadmin
+      ansible_host: 192.168.225.33
+    vmhost3.ipa.norme.sh:
+      ansible_user: localadmin
+      ansible_host: 192.168.225.34
+incus_cluster0_pri:
+  hosts:
+    vmhost1.ipa.norme.sh:
+incus_cluster0_sec:
+  hosts:
+    vmhost2.ipa.norme.sh:
+    vmhost3.ipa.norme.sh:
+truenas:
+  hosts:
+    nas.ipa.norme.sh:
+      ansible_user: truenas_admin
+      ansible_host: 192.168.225.126
+pve_server:
+  hosts:
+    pve-lab.idm.norme.sh:
+      ansible_host: 192.168.225.30
+      ansible_user: localadmin
