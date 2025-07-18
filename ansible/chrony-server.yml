@@ -26,7 +26,9 @@
         chrony_conf_dir: /etc/chrony
         chrony_group: '_chrony'
       when: ansible_os_family == 'Debian'
+
     - name: "Enable chronyd to run in a container"
+      when: ansible_virtualization_type | default("unset") == "lxc"
       block:
         - name: "Create systemd override directory for chronyd"
           ansible.builtin.file:
@@ -51,8 +53,6 @@
           notify:
             - Reload systemd daemon
             - Restart chrony
-
-      when: ansible_virtualization_type | default("unset") == "lxc"
 
     - name: Install chrony keyfile
       ansible.builtin.template:
