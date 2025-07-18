@@ -1,0 +1,9 @@
+/* Define ACL for trusted networks */
+acl "trusted_network" {
+    {% for network in allowed_networks.ipv4 %}
+    {{ network }};
+    {% endfor %}
+    {% for network in allowed_networks.ipv6 %}
+    {{ network }};
+    {% endfor %}
+};
