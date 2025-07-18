@@ -1,0 +1,29 @@
+# this is not a playbook
+# these tasks can be imported or included in playbooks, however!
+- name: Remove localhost entries with hostname and FQDN - IPv4
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    state: absent
+    regexp: "^127.0.[01].1\\s+{{ ansible_hostname }}"
+
+- name: Remove localhost entries with hostname and FQDN - IPv6
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    state: absent
+    regexp: "^::1\\s+{{ ansible_hostname }}"
+
+- name: Create entries with hostname and FQDN mapped to IP - IPv4
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    state: present
+    line: "{{ ansible_default_ipv4['address'] }} {{ ansible_fqdn }} {{ ansible_hostname }}"
+
+- name: Create entries with hostname and FQDN mapped to IP - IPv6
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    state: present
+    line: "{{ ansible_default_ipv6['address']}} {{ ansible_fqdn }} {{ ansible_hostname }}"

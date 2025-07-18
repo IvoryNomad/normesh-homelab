@@ -1,0 +1,20 @@
+- name: Create DNS conffiles if they don't exist
+  ansible.builtin.file:
+    path: "{{ cfg_file }}"
+    state: touch
+    mode: '0644'
+    owner: root
+    group: named
+  vars:
+    cfg_file: "{{ ('/etc/named', item.name) | path_join }}"
+    
+- name: Configure named conffiles
+  ansible.builtin.blockinfile:
+    path: "{{ cfg_file }}"
+    marker: "/* {mark} ANSIBLE MANAGED BLOCK - {{ item.description }} */"
+    block: "{{ lookup('template', tmpl_file) }}"
+    backup: true
+  vars:
+    cfg_file: "{{ ('/etc/named', item.name) | path_join }}"
+    tmpl_file: "{{ './templates/' + item.name + '.j2' }}"
+  notify: Restart DNS service

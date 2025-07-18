@@ -1,0 +1,9 @@
+---
+# create DNS RRs per zone; loop over RRs defined by zone
+- name: Create SRV records
+  ipadnsrecord:
+    ipaadmin_password: "{{ freeipa_adminpass }}"
+    name: "{{ item.name }}"
+    record_type: 'SRV'
+    record_value: "{{ item.data }}"
+    state: present
