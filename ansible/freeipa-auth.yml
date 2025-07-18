@@ -10,7 +10,7 @@
   vars:
     ipaadmin_creds: "{{ lookup('onepassword', 'op://CICD-homelab/ipaadmin/password', use_dotenv=true, dotenv_path='~localadmin/homelab-iac/.env') }}"
 
-    roles:
+    ipa_roles:
       - name: "host-admin"
         state: present
         privilege:
@@ -24,12 +24,12 @@
         name: cfg
 
     - name: Create roles
-      iparole:
+      freeipa.ansible_freeipa.iparole:
         ipaadmin_password: "{{ ipaadmin_creds }}"
         name: "{{ item.name }}"
         state: "{{ item.state }}"
         privilege: "{{ item.privilege | default(omit) }}"
         description: "{{ item.description | default(omit) }}"
-      loop: "{{ roles }}"
+      loop: "{{ ipa_roles }}"
 
 #   - name: Create hostgroups
