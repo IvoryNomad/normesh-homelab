@@ -63,7 +63,7 @@
           nameserver 192.168.225.34
 
   roles:
-    - role: ipaserver
+    - role: freeipa.ansible_freeipa.ipaserver
       state: present # noqa var-naming[no-role-prefix]
 
 - name: Install and configure IPA replicas
@@ -75,7 +75,7 @@
     - install
 
   roles:
-    - role: ipareplica
+    - role: freeipa.ansible_freeipa.ipareplica
       state: present # noqa var-naming[no-role-prefix]
 
 - name: Backup IPA server to controller
@@ -84,8 +84,8 @@
   tags: backup
 
   vars:
-    ipabackup_to_controller: yes
-    ipabackup_keep_on_server: yes
+    ipabackup_to_controller: true
+    ipabackup_keep_on_server: true
     ipabackup_controller_path: "{{ (inventory_dir, 'ipabackup') | path_join }}"
 
   pre_tasks:
@@ -109,8 +109,8 @@
         block: "ipabackup/"
 
   roles:
-    - role: ipabackup
-      state: present
+    - role: freeipa.ansible_freeipa.ipabackup
+      state: present # noqa var-naming[no-role-prefix]
 
 - name: Remove IPA replicas
   hosts: ipareplica
@@ -118,5 +118,5 @@
   tags: remove_replica
 
   roles:
-    - role: ipareplica
+    - role: freeipa.ansible_freeipa.ipareplica
       state: absent # noqa var-naming[no-role-prefix]
