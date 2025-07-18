@@ -27,6 +27,7 @@
       when: ansible_os_family == 'Debian'
 
     - name: "Enable chronyd to run in a container"
+      when: ansible_virtualization_type | default("unset") == "lxc"
       block:
         - name: "Create systemd override directory for chronyd"
           ansible.builtin.file:
@@ -53,9 +54,7 @@
             - Restart chrony
 
         - name: Flush handlers
-          meta: flush_handlers
-
-      when: ansible_virtualization_type | default("unset") == "lxc"
+          ansible.builtin.meta: flush_handlers
 
     - name: Install chrony client configuration
       ansible.builtin.template:
