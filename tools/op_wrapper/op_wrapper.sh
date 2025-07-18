@@ -2,9 +2,14 @@
 
 # wrapper script for 1Password CLI 'op' command
 
-SECRET_FILE=~/.secret.op
-if [ ! -f "$SECRET_FILE" ]; then
-  echo "ERROR: secrets file not present"
+# Print to stderr
+echoerr() {
+  echo "$@" 1>&2
+}
+
+SECRET_FILE="${SECRET_FILE:=$HOME/.secret.op}"
+if [ ! -r "$SECRET_FILE" ]; then
+  echoerr "ERROR (op_wrapper): secrets file not present"
   exit 1
 fi
 source "$SECRET_FILE"
