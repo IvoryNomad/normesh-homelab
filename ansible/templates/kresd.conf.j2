@@ -1,0 +1,35 @@
+-- SPDX-License-Identifier: CC0-1.0
+-- vim:syntax=lua:set ts=4 sw=4:
+-- Refer to manual: https://knot-resolver.readthedocs.org/en/stable/
+
+local systemd_instance = os.getenv("SYSTEMD_INSTANCE")
+
+modules.load('nsid')
+nsid.name(systemd_instance)
+
+-- Network interface configuration
+net.listen(net.lo, 53, { kind = 'dns', freebind = true })
+net.listen(net.{{ ansible_default_ipv4.interface }}, 53, { kind = 'dns', freebind = true })
+
+--if string.match(systemd_instance, '^dns') then
+--     net.listen(net.lo, 53, { kind = 'dns', freebind = true })
+--     net.listen(net.{{ ansible_default_ipv4.interface }}, 53, { kind = 'dns', freebind = true })
+--elseif string.match(systemd_instance, '^tls') then
+--     net.listen(net.lo, 853, { kind = 'tls', freebind = true })
+--     net.listen(net.{{ ansible_default_ipv4.interface }}, 853, { kind = 'tls', freebind = true })
+--elseif string.match(systemd_instance, '^doh') then
+--     net.listen(net.lo, 443, { kind = 'doh2', freebind = true })
+--     net.listen(net.{{ ansible_default_ipv4.interface }}, 443, { kind = 'doh2', freebind = true })
+--else
+--     panic("Use kresd@dns*, kresd@tls* or kresd@doh* instance names")
+--end
+
+-- Load useful modules
+modules = {
+        'hints > iterate',  -- Allow loading /etc/hosts or custom root hints
+        'stats',            -- Track internal statistics
+        'predict',          -- Prefetch expiring/frequent records
+}
+
+-- Cache size
+cache.size = cache.fssize() - 10 * MB
