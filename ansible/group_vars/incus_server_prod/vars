@@ -1,0 +1,3 @@
+incus_package: incus
+incus_repo_name: zabbly-incus-lts-6.0
+incus_repo_uri: https://pkgs.zabbly.com/incus/lts-6.0
