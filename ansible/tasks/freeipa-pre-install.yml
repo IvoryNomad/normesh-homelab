@@ -26,4 +26,4 @@
   ansible.builtin.lineinfile:
     path: /etc/hosts
     state: present
-    line: "{{ ansible_default_ipv6['address']}} {{ ansible_fqdn }} {{ ansible_hostname }}"
+    line: "{{ ansible_default_ipv6['address'] }} {{ ansible_fqdn }} {{ ansible_hostname }}"
