@@ -115,6 +115,7 @@
           - incus
           - version
       changed_when: false
+      failed_when: false
       register: incus_version
 
     - name: Debug command
@@ -122,9 +123,15 @@
         var: incus_version
         verbosity: 3
 
-    - name: Display version info
+    - name: Display version info (success)
       ansible.builtin.debug:
-        msg: "{{ inventory_hostname }}:\n {{ incus_version.stdout if incus_version.rc == 0 else 'Version check failed' }}"
+        msg: "{{ inventory_hostname }}:\n{{ incus_version.stdout }}"
+      when: incus_version.rc == 0
+
+    - name: Display version info (failure)
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: Version check failed - {{ incus_version.stderr | default('Command not found') }}"
+      when: incus_version.rc != 0
 
 - name: Configure Incus administration
   hosts: incus_server_dev,incus_server_prod
