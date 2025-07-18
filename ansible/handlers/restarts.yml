@@ -7,6 +7,12 @@
     name: chronyd
     state: restarted
 
+- name: Restart knot-resolver
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    state: restarted
+  loop: "{{ knot_services[1:] }}"
+
 - name: Restart NFS server
   ansible.builtin.service:
     name: nfs-server
