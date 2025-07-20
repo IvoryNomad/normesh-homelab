@@ -5,40 +5,17 @@
     - default
     - install
 
-  pre_tasks:
-    - name: Fix /etc/resolv.conf
-      ansible.builtin.copy:
-        dest: /etc/resolv.conf
-        owner: root
-        group: root
-        mode: '0644'
-        content: |-
-          domain ipa.norme.sh
-          search ipa.norme.sh
-          nameserver 192.168.225.32
-          nameserver 192.168.225.33
-          nameserver 192.168.225.34
-
   tasks:
     - name: Import pre-install tasks
       ansible.builtin.import_tasks: tasks/freeipa-pre-install.yml
 
-- name: Import chrony-server playbook
+- name: Import chrony-client playbook
   # TODO: make this a role and call from the play above
   tags:
     - default
     - chrony
     - install
   ansible.builtin.import_playbook: chrony-client.yml
-
-- name: Reboot device
-  hosts: ipaserver,ipareplica
-  become: true
-  tags: reboot
-
-  tasks:
-    - name: Reboot for install
-      ansible.builtin.reboot:
 
 - name: Install and configure IPA servers
   hosts: ipaserver
@@ -47,20 +24,6 @@
   tags:
     - default
     - install
-
-  pre_tasks:
-    - name: Fix /etc/resolv.conf
-      ansible.builtin.copy:
-        dest: /etc/resolv.conf
-        owner: root
-        group: root
-        mode: '0644'
-        content: |-
-          domain ipa.norme.sh
-          search ipa.norme.sh
-          nameserver 192.168.225.32
-          nameserver 192.168.225.33
-          nameserver 192.168.225.34
 
   roles:
     - role: freeipa.ansible_freeipa.ipaserver
