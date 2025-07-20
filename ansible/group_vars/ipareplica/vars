@@ -1,0 +1,8 @@
+ipaadmin_password: "{{ lookup('onepassword', 'op://CICD-homelab/ipaadmin/password', use_dotenv=true, dotenv_path='../.env') }}"
+ipaadmin_principal: "{{ lookup('onepassword', 'op://CICD-homelab/ipaadmin/username', use_dotenv=true, dotenv_path='../.env') }}"
+ipadm_password: "{{ lookup('onepassword', 'op://CICD-homelab/ipadm/password', use_dotenv=true, dotenv_path='../.env') }}"
+ipareplica_domain: ipa.norme.sh
+ipareplica_realm: IPA.NORME.SH
+ipareplica_setup_dns: true
+ipareplica_no_forwarders: true
+ipareplica_setup_ca: true
