@@ -47,6 +47,9 @@ incus_cluster0_sec:
   hosts:
     vmhost2.ipa.norme.sh:
     vmhost3.ipa.norme.sh:
+nut_servers:
+  hosts:
+    vmhost0.ipa.norme.sh:
 truenas:
   hosts:
     nas.ipa.norme.sh:
@@ -54,6 +57,11 @@ truenas:
       ansible_host: 192.168.225.126
 pve_server:
   hosts:
-    pve-lab.idm.norme.sh:
+    pve-lab.ipa.norme.sh:
       ansible_host: 192.168.225.30
+      ansible_user: localadmin
+pbs_server:
+  hosts:
+    pbs.ipa.norme.sh:
+      ansible_host: 192.168.226.30
       ansible_user: localadmin
