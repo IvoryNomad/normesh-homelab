@@ -10,8 +10,8 @@ if [ -n "${SUDO_USER}" ]; then
     echo "Aborting."
     exit 1
   fi
-  HISTFILE=/dev/null /bin/bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
+  CLOUD_USER=${CLOUD_USER:-cloud-user} HISTFILE=/dev/null /bin/bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
 else
   history -w ~/.bash_history
-  sudo HISTFILE=/dev/null /bin/bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
+  sudo CLOUD_USER=${CLOUD_USER:-cloud-user} HISTFILE=/dev/null /bin/bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
 fi
