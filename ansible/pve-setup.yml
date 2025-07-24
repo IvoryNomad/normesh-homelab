@@ -2,7 +2,7 @@
 - name: Fix AER reporting issues
   hosts: pve_server
   gather_facts: true
-  become: yes
+  become: true
 
   tasks:
     - name: Create template unit file
@@ -28,10 +28,11 @@
       ansible.builtin.meta: flush_handlers
       when: ansible_facts['systemd'] is defined
 
-    - name: Set fact - Identify PCI Starship/Matisse GPP Bridge IDs 
+    - name: Set fact - Identify PCI Starship/Matisse GPP Bridge IDs
       # Note: this task is specific to the AsRockRack RomeD8-2T system board
-      ansible.builtin.shell:
-        cmd: lspci -D | grep 'Starship/Matisse GPP Bridge' | awk '{print $1}' | sort -u
+      ansible.builtin.shell: |
+        set -o pipefail
+        lspci -D | grep 'Starship/Matisse GPP Bridge' | awk '{print $1}' | sort -u
       args:
         executable: /bin/bash
       register: lspci_out
@@ -41,7 +42,7 @@
     - name: Enable and start systemd unit template instances
       ansible.builtin.systemd:
         name: "pcie-cap-fix@{{ item }}.service"
-        enabled: yes
+        enabled: true
         state: started
       loop: "{{ lspci_out.stdout_lines | default([]) }}"
       when: lspci_out.stdout_lines is defined and lspci_out.stdout_lines | length > 0
