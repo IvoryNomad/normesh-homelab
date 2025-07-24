@@ -43,7 +43,6 @@
           - knot-resolver
           - knot-dnsutils
         state: present
-      register: knot_installed
 
     - name: Gather mount facts
       ansible.builtin.mount_facts:
@@ -51,7 +50,7 @@
 
     - name: Register if cache is mounted as tmpfs
       ansible.builtin.set_fact:
-        is_cache_tmpfs: "{{ '/var/cache/knot-resolver' in ansible_facts.mount_points.keys() and ansible_facts.mount_points['/var/cache/knot-resolver'].fstype == 'tmpfs' }}"
+        is_cache_tmpfs: "{{ '/var/cache/knot-resolver' in ansible_facts.mount_points.keys() and ansible_facts.mount_points['/var/cache/knot-resolver'].fstype == 'tmpfs' }}" # noqa yaml[line-length]
 
     - name: Gather service facts
       ansible.builtin.service_facts:
@@ -84,6 +83,7 @@
         opts: "rw,size=256M,uid=knot-resolver,gid=knot-resolver,nosuid,nodev,noexec,mode=0700"
         state: mounted
       when: not is_cache_tmpfs
+      notify: Restart knot-resolver-all
 
     - name: Configure knot-resolver
       ansible.builtin.template:
@@ -93,14 +93,6 @@
         group: root
         mode: '0644'
       notify: Restart knot-resolver
-
-    - name: Enable and start services
-      ansible.builtin.systemd_service:
-        name: "{{ item }}"
-        enabled: true
-        state: started
-      loop: "{{ knot_services }}"
-      when: knot_installed.changed
 
     - name: Configure system to use local DNS cache
       ansible.builtin.copy:
@@ -112,7 +104,6 @@
           domain ipa.norme.sh
           search ipa.norme.sh
           nameserver 127.0.0.1
-      when: knot_installed.changed
 
   handlers:
     - name: Restart services
