@@ -1,6 +1,6 @@
 ---
 - name: Install chrony
-  hosts: all,!incus_cluster0_pri,!incus_cluster0_sec
+  hosts: all,!incus_server_prod,!truenas
   gather_facts: true
   become: true
 
@@ -11,7 +11,7 @@
         state: present
 
 - name: Configure chrony client
-  hosts: all,!incus_cluster0_pri,!incus_cluster0_sec
+  hosts: all,!incus_server_prod,!truenas
   gather_facts: true
   become: true
 
@@ -20,11 +20,13 @@
       ansible.builtin.set_fact:
         chrony_conf_dir: /etc
       when: ansible_os_family == 'RedHat'
+      changed_when: false
 
     - name: Set correct chrony configuration directory - Debian/Ubuntu
       ansible.builtin.set_fact:
         chrony_conf_dir: /etc/chrony
       when: ansible_os_family == 'Debian'
+      changed_when: false
 
     - name: "Enable chronyd to run in a container"
       when: ansible_virtualization_type | default("unset") == "lxc"
