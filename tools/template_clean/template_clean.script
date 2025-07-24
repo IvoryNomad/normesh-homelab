@@ -13,7 +13,6 @@ show_help() {
   echo "NB: set the environment variable 'CLOUD_USER' to the desired username if"
   echo "    'cloud-user' is not correct"
   echo "NB: removes /etc/sudoers.d/90-cloud-init-users to allow cloud-init to recreate it"
-  echo "NB: must be run as the root user (or via sudo)"
 }
 
 # Check if running as root
@@ -39,7 +38,7 @@ LOCALUSERHOME=""
 
 # Try to determine user's home directory
 if command -v getent >/dev/null; then
-  LOCALUSERHOME=$(getent passwd "$LOCALUSER" | cut -d: -f6)
+  LOCALUSERHOME=$(getent passwd $LOCALUSER | cut -d: -f6)
 fi
 if [ -z "$LOCALUSERHOME" ]; then
   echoerr "WARNING: Could not determine home directory for user $LOCALUSER"
@@ -125,8 +124,7 @@ cat /dev/null > /etc/machine-id || {
   exit 1
 }
 cat /dev/null > /var/lib/dbus/machine-id || {
-  echoerr "ERROR: Failed to clear /var/lib/dbus/machine-id"
-  exit 1
+  echoerr "WARNING: Failed to clear /var/lib/dbus/machine-id"
 }
 
 # Run cloud-init clean if available
