@@ -7,20 +7,31 @@
     name: chronyd
     state: restarted
 
+- name: Restart knot-resolver-all
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    state: restarted
+  loop: "{{ knot_services }}"
+
 - name: Restart knot-resolver
   ansible.builtin.systemd_service:
     name: "{{ item }}"
     state: restarted
   loop: "{{ knot_services[1:] }}"
 
-- name: Restart NFS server
+- name: Restart nut-server
   ansible.builtin.service:
-    name: nfs-server
+    name: nut-server
     state: restarted
 
-- name: Restart OpenAFS client
+- name: Restart nut-client
   ansible.builtin.service:
-    name: openafs-client
+    name: nut-client
+    state: restarted
+
+- name: Restart nut-monitor
+  ansible.builtin.service:
+    name: nut-monitor
     state: restarted
 
 - name: Restart SSSD
@@ -34,6 +45,6 @@
     state: restarted
 
 - name: Restart systemd-sysctl
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: systemd-sysctl
     state: restarted
