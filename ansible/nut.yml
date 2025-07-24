@@ -1,0 +1,43 @@
+---
+- name: Install knot-resolver
+  hosts: nut_servers
+  gather_facts: true
+  become: true
+
+  vars:
+    nut_admin_user: "{{ lookup('onepassword', 'op://CICD-homelab/nut-admin/username', use_dotenv=true, dotenv_path='../.env') }}"
+    nut_admin_pass: "{{ lookup('onepassword', 'op://CICD-homelab/nut-admin/password', use_dotenv=true, dotenv_path='../.env') }}"
+    nut_observer_user: "{{ lookup('onepassword', 'op://CICD-homelab/nut-observer/username', use_dotenv=true, dotenv_path='../.env') }}"
+    nut_observer_pass: "{{ lookup('onepassword', 'op://CICD-homelab/nut-observer/password', use_dotenv=true, dotenv_path='../.env') }}"
+
+  tasks:
+    - name: Install nut
+      ansible.builtin.package:
+        name:
+          - usbutils
+          - nut-client
+          - nut-server
+        state: present
+      register: nut_installed
+
+    - name: Configure nut
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "/etc/nut/{{ item | replace('nut-', '') }}"
+        owner: root
+        group: nut
+        mode: '0640'
+      loop:
+        - nut-nut.conf
+        - nut-ups.conf
+        - nut-upsd.conf
+        - nut-upsd.users
+        - nut-upsmon.conf
+      notify:
+        - Restart nut-server
+        - Restart nut-client
+        - Restart nut-monitor
+
+  handlers:
+    - name: Restart services
+      ansible.builtin.import_tasks: handlers/restarts.yml
