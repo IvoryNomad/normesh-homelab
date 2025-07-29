@@ -88,7 +88,7 @@ freeze-collections: venv
 	@echo "Generating $(COLLECTIONS_REQUIREMENTS) from collections in $(COLLECTIONS_PATH)..."
 	@echo "---" > $(COLLECTIONS_REQUIREMENTS)
 	@echo "collections:" >> $(COLLECTIONS_REQUIREMENTS)
-	@$(ANSIBLE_GALAXY) collection list -p $(COLLECTIONS_PATH) --format yaml 2>/dev/null | grep -E "^  [a-zA-Z]" | sed 's/^  /  - name: /' | sed 's/:.*$$//' >> $(COLLECTIONS_REQUIREMENTS) || echo "  # No collections installed yet" >> $(COLLECTIONS_REQUIREMENTS)
+	@$(ANSIBLE_GALAXY) collection list -p $(COLLECTIONS_PATH) 2>/dev/null | awk '/^# .*\/ansible\/collections\/ansible_collections$$/{in_target=1; next} /^# /{in_target=0} in_target && /^[a-zA-Z]/ && !/^Collection/ && !/^---/ {print "  - name: " $$1}' >> $(COLLECTIONS_REQUIREMENTS) || echo "  # No collections installed yet" >> $(COLLECTIONS_REQUIREMENTS)
 	@echo "Collections requirements saved to $(COLLECTIONS_REQUIREMENTS)"
 
 # Install development dependencies (customize as needed)
