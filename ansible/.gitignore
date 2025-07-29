@@ -169,6 +169,10 @@ tmp/
 
 # incoming Ansible files
 files/
+
+# local ansible collections
+collections/
+
 # BEGIN ANSIBLE MANAGED BLOCK - IGNORE IPA BACKUPS #
 ipabackup/
 # END ANSIBLE MANAGED BLOCK - IGNORE IPA BACKUPS #
