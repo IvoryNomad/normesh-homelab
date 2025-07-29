@@ -3,33 +3,36 @@
   hosts: ipaserver
   become: true
   tags:
-    - default
-    - install
-    - create_roles
+  - default
+  - install
+  - create_roles
 
   vars:
-    ipaadmin_creds: "{{ lookup('onepassword', 'op://CICD-homelab/ipaadmin/password', use_dotenv=true, dotenv_path='../.env') }}"
+    ipaadmin_creds: "{{ lookup('ivorynomad.onepassword.onepassword',
+                      'op://CICD-homelab/ipaadmin/password',
+                      use_dotenv=true,
+                      dotenv_path='../.env') }}"
 
     ipa_roles:
-      - name: "host-admin"
-        state: present
-        privilege:
-          - 'Host Administrators'
-        description: 'Can add and enroll hosts'
+    - name: "host-admin"
+      state: present
+      privilege:
+      - 'Host Administrators'
+      description: 'Can add and enroll hosts'
 
   tasks:
-    - name: Include auth and identify variables
-      ansible.builtin.include_vars:
-        file: vars/auth_identity.yml
-        name: cfg
+  - name: Include auth and identify variables
+    ansible.builtin.include_vars:
+      file: vars/auth_identity.yml
+      name: cfg
 
-    - name: Create roles
-      freeipa.ansible_freeipa.iparole:
-        ipaadmin_password: "{{ ipaadmin_creds }}"
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        privilege: "{{ item.privilege | default(omit) }}"
-        description: "{{ item.description | default(omit) }}"
-      loop: "{{ ipa_roles }}"
+  - name: Create roles
+    freeipa.ansible_freeipa.iparole:
+      ipaadmin_password: "{{ ipaadmin_creds }}"
+      name: "{{ item.name }}"
+      state: "{{ item.state }}"
+      privilege: "{{ item.privilege | default(omit) }}"
+      description: "{{ item.description | default(omit) }}"
+    loop: "{{ ipa_roles }}"
 
 #   - name: Create hostgroups

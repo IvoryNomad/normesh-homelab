@@ -8,100 +8,100 @@
     zabbly_key_fingerprint: "4EFC 5906 96CB 15B8 7C73  A3AD 82CC"
 
   tasks:
-    - name: Install Incus (debian)
-      when: ansible_os_family == 'Debian'
+  - name: Install Incus (debian)
+    when: ansible_os_family == 'Debian'
+    block:
+    - name: Set install fact
+      ansible.builtin.set_fact:
+        can_install: true
+
+    - name: Ensure keyring directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Retrieve key
+      ansible.builtin.get_url:
+        url: https://pkgs.zabbly.com/key.asc
+        dest: /etc/apt/keyrings/zabbly.asc
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Validate Zabbly signing key
       block:
-        - name: Set install fact
-          ansible.builtin.set_fact:
-            can_install: true
+      - name: Get key fingerprint
+        ansible.builtin.command:
+          argv:
+          - gpg
+          - --show-keys
+          - --fingerprint
+          - /etc/apt/keyrings/zabbly.asc
+        changed_when: false
+        register: zabbly_key_info
 
-        - name: Ensure keyring directory exists
-          ansible.builtin.file:
-            path: /etc/apt/keyrings
-            state: directory
-            owner: root
-            group: root
-            mode: '0755'
+      - name: Validate fingerprint
+        ansible.builtin.assert:
+          that: "zabbly_key_fingerprint in zabbly_key_info.stdout"
+          fail_msg: "Signing key failed validation"
+          success_msg: "Signing key passed validation"
 
-        - name: Retrieve key
-          ansible.builtin.get_url:
-            url: https://pkgs.zabbly.com/key.asc
-            dest: /etc/apt/keyrings/zabbly.asc
-            mode: '0644'
-            owner: root
-            group: root
+    - name: Add Zabbly repository
+      block:
+      - name: Set repository variables
+        ansible.builtin.set_fact:
+          incus_repo_codename: "{{ ansible_distribution_release }}"
+          incus_repo_arch: "{{ arch_mapping[ansible_architecture] | default(ansible_architecture) }}"
+        vars:
+          arch_mapping:
+            x86_64: amd64
+            aarch64: arm64
 
-        - name: Validate Zabbly signing key
-          block:
-            - name: Get key fingerprint
-              ansible.builtin.command:
-                argv:
-                  - gpg
-                  - --show-keys
-                  - --fingerprint
-                  - /etc/apt/keyrings/zabbly.asc
-              changed_when: false
-              register: zabbly_key_info
+      - name: Validate architecture is supported
+        ansible.builtin.assert:
+          that: "incus_repo_arch in ['amd64', 'arm64']"
+          fail_msg: "Architecture {{ incus_repo_arch }} is not supported"
+          success_msg: "Architecture {{ incus_repo_arch }} is supported"
 
-            - name: Validate fingerprint
-              ansible.builtin.assert:
-                that: "zabbly_key_fingerprint in zabbly_key_info.stdout"
-                fail_msg: "Signing key failed validation"
-                success_msg: "Signing key passed validation"
+      - name: Ensure required packages are installed
+        ansible.builtin.apt:
+          name: python3-debian
+          state: present
 
-        - name: Add Zabbly repository
-          block:
-            - name: Set repository variables
-              ansible.builtin.set_fact:
-                incus_repo_codename: "{{ ansible_distribution_release }}"
-                incus_repo_arch: "{{ arch_mapping[ansible_architecture] | default(ansible_architecture) }}"
-              vars:
-                arch_mapping:
-                  x86_64: amd64
-                  aarch64: arm64
+      - name: Create deb822 repository file
+        ansible.builtin.deb822_repository:
+          name: "{{ incus_repo_name }}"
+          enabled: true
+          types: deb
+          uris: "{{ incus_repo_uri }}"
+          suites: "{{ incus_repo_codename }}"
+          components: main
+          architectures: "{{ incus_repo_arch }}"
+          signed_by: /etc/apt/keyrings/zabbly.asc
+        register: repo_created
 
-            - name: Validate architecture is supported
-              ansible.builtin.assert:
-                that: "incus_repo_arch in ['amd64', 'arm64']"
-                fail_msg: "Architecture {{ incus_repo_arch }} is not supported"
-                success_msg: "Architecture {{ incus_repo_arch }} is supported"
+      - name: Perform 'apt update'
+        ansible.builtin.apt:
+          update_cache: true
+        # we really want to force an update here, which is why we do
+        # not use a handler - if we did we'd have to flush handlers anyway
+        when: repo_created.changed # noqa no-handler
 
-            - name: Ensure required packages are installed
-              ansible.builtin.apt:
-                name: python3-debian
-                state: present
+    - name: Install Incus # noqa package-latest
+      # we really do want to install the latest version of Incus available
+      ansible.builtin.apt:
+        name: "{{ incus_package }}"
+        state: latest
+        update_cache: true
+        cache_valid_time: 3600
 
-            - name: Create deb822 repository file
-              ansible.builtin.deb822_repository:
-                name: "{{ incus_repo_name }}"
-                enabled: true
-                types: deb
-                uris: "{{ incus_repo_uri }}"
-                suites: "{{ incus_repo_codename }}"
-                components: main
-                architectures: "{{ incus_repo_arch }}"
-                signed_by: /etc/apt/keyrings/zabbly.asc
-              register: repo_created
-
-            - name: Perform 'apt update'
-              ansible.builtin.apt:
-                update_cache: true
-              # we really want to force an update here, which is why we do
-              # not use a handler - if we did we'd have to flush handlers anyway
-              when: repo_created.changed # noqa no-handler
-
-        - name: Install Incus # noqa package-latest
-          # we really do want to install the latest version of Incus available
-          ansible.builtin.apt:
-            name: "{{ incus_package }}"
-            state: latest
-            update_cache: true
-            cache_valid_time: 3600
-
-    - name: Fail on unsupported systems
-      when: can_install is not defined
-      ansible.builtin.fail:
-        msg: "Automated installs for {{ incus_package }} on {{ ansible_distribution }} are not supported"
+  - name: Fail on unsupported systems
+    when: can_install is not defined
+    ansible.builtin.fail:
+      msg: "Automated installs for {{ incus_package }} on {{ ansible_distribution }} are not supported"
 
 - name: Verify Incus installation
   hosts: incus_server_dev,incus_server_prod,incus_client
@@ -109,29 +109,29 @@
   become: false
 
   tasks:
-    - name: Check Incus version
-      ansible.builtin.command:
-        argv:
-          - incus
-          - version
-      changed_when: false
-      failed_when: false
-      register: incus_version
+  - name: Check Incus version
+    ansible.builtin.command:
+      argv:
+      - incus
+      - version
+    changed_when: false
+    failed_when: false
+    register: incus_version
 
-    - name: Debug command
-      ansible.builtin.debug:
-        var: incus_version
-        verbosity: 3
+  - name: Debug command
+    ansible.builtin.debug:
+      var: incus_version
+      verbosity: 3
 
-    - name: Display version info (success)
-      ansible.builtin.debug:
-        msg: "{{ inventory_hostname }}:\n{{ incus_version.stdout }}"
-      when: incus_version.rc == 0
+  - name: Display version info (success)
+    ansible.builtin.debug:
+      msg: "{{ inventory_hostname }}:\n{{ incus_version.stdout }}"
+    when: incus_version.rc == 0
 
-    - name: Display version info (failure)
-      ansible.builtin.debug:
-        msg: "{{ inventory_hostname }}: Version check failed - {{ incus_version.stderr | default('Command not found') }}"
-      when: incus_version.rc != 0
+  - name: Display version info (failure)
+    ansible.builtin.debug:
+      msg: "{{ inventory_hostname }}: Version check failed - {{ incus_version.stderr | default('Command not found') }}"
+    when: incus_version.rc != 0
 
 - name: Configure Incus administration
   hosts: incus_server_dev,incus_server_prod
@@ -139,8 +139,8 @@
   become: true
 
   tasks:
-    - name: Allow ansible to administrate incus
-      ansible.builtin.user:
-        name: "{{ ansible_user }}"
-        groups: incus-admin
-        append: true
+  - name: Allow ansible to administrate incus
+    ansible.builtin.user:
+      name: "{{ ansible_user }}"
+      groups: incus-admin
+      append: true

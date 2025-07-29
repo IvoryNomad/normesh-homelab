@@ -1,126 +1,127 @@
+---
 # freeipa DNS config
 ipa_forward_zones:
-  - "ipa.norme.sh."
+- "ipa.norme.sh."
 ipa_reverse_networks:
-  - "192.168.224.0/24"
-  - "192.168.225.0/24"
-  - "192.168.226.0/24"
-  - "192.168.231.0/24"
-  - "192.168.232.0/24"
-  - "2001:470:8:289::/64"
-  - "2001:470:e0fc::/48"
+- "192.168.224.0/24"
+- "192.168.225.0/24"
+- "192.168.226.0/24"
+- "192.168.231.0/24"
+- "192.168.232.0/24"
+- "2001:470:8:289::/64"
+- "2001:470:e0fc::/48"
 ipa_dns_records:
   224.168.192.in-addr.arpa:
-    - name: "1"
-      state: present
-      record_type: 'PTR'
-      record_value: "lagg0-10-gateway.ipa.norme.sh"
+  - name: "1"
+    state: present
+    record_type: 'PTR'
+    record_value: "lagg0-10-gateway.ipa.norme.sh"
   225.168.192.in-addr.arpa:
-    - name: "1"
-      state: present
-      record_type: 'PTR'
-      record_value: "lagg0-20-gateway.ipa.norme.sh"
+  - name: "1"
+    state: present
+    record_type: 'PTR'
+    record_value: "lagg0-20-gateway.ipa.norme.sh"
   226.168.192.in-addr.arpa:
-    - name: "1"
-      state: present
-      record_type: 'PTR'
-      record_value: "lagg0-21-gateway.ipa.norme.sh"
+  - name: "1"
+    state: present
+    record_type: 'PTR'
+    record_value: "lagg0-21-gateway.ipa.norme.sh"
 # 231.168.192.in-addr.arpa:
   232.168.192.in-addr.arpa:
-    - name: "1"
-      state: present
-      record_type: 'PTR'
-      record_value: "lagg0-30-gateway.ipa.norme.sh"
+  - name: "1"
+    state: present
+    record_type: 'PTR'
+    record_value: "lagg0-30-gateway.ipa.norme.sh"
   ipa.norme.sh:
-    - name: "gateway"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.231.1"
-      a_create_reverse: true
-    - name: "ipa1"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.226.2"
-      a_create_reverse: true
-    - name: "ipa1"
-      state: present
-      record_type: 'AAAA'
-      record_value: "2001:470:e0fc:2::2"
-      aaaa_create_reverse: true
-    - name: "ipa2"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.226.3"
-      a_create_reverse: true
-    - name: "ipa2"
-      state: present
-      record_type: 'AAAA'
-      record_value: "2001:470:e0fc:2::3"
-      aaaa_create_reverse: true
-    - name: "ipa3"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.226.4"
-      a_create_reverse: true
-    - name: "ipa3"
-      state: present
-      record_type: 'AAAA'
-      record_value: "2001:470:e0fc:2::4"
-      aaaa_create_reverse: true
-    - name: "pve-lab"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.225.30"
-      a_create_reverse: true
-    - name: "vmhost0"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.225.31"
-      a_create_reverse: true
-    - name: "vmhost1"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.225.32"
-      a_create_reverse: true
-    - name: "vmhost1"
-      state: present
-      record_type: 'AAAA'
-      record_value: "2001:470:e0fc:1::20"
-      aaaa_create_reverse: true
-    - name: "vmhost2"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.225.33"
-      a_create_reverse: true
-    - name: "vmhost2"
-      state: present
-      record_type: 'AAAA'
-      record_value: "2001:470:e0fc:1::21"
-      aaaa_create_reverse: true
-    - name: "vmhost3"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.225.34"
-      a_create_reverse: true
-    - name: "vmhost3"
-      state: present
-      record_type: 'AAAA'
-      record_value: "2001:470:e0fc:1::22"
-      aaaa_create_reverse: true
-    - name: "_ntp._udp"
-      state: present
-      record_type: 'SRV'
-      record_value: "0 100 123 vmhost1.ipa.norme.sh"
-    - name: "_ntp._udp"
-      state: present
-      record_type: 'SRV'
-      record_value: "0 100 123 vmhost2.ipa.norme.sh"
-    - name: "_ntp._udp"
-      state: present
-      record_type: 'SRV'
-      record_value: "0 100 123 vmhost3.ipa.norme.sh"
-    - name: "nas"
-      state: present
-      record_type: 'A'
-      record_value: "192.168.225.126"
-      a_create_reverse: true
+  - name: "gateway"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.231.1"
+    a_create_reverse: true
+  - name: "ipa1"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.226.2"
+    a_create_reverse: true
+  - name: "ipa1"
+    state: present
+    record_type: 'AAAA'
+    record_value: "2001:470:e0fc:2::2"
+    aaaa_create_reverse: true
+  - name: "ipa2"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.226.3"
+    a_create_reverse: true
+  - name: "ipa2"
+    state: present
+    record_type: 'AAAA'
+    record_value: "2001:470:e0fc:2::3"
+    aaaa_create_reverse: true
+  - name: "ipa3"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.226.4"
+    a_create_reverse: true
+  - name: "ipa3"
+    state: present
+    record_type: 'AAAA'
+    record_value: "2001:470:e0fc:2::4"
+    aaaa_create_reverse: true
+  - name: "pve-lab"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.225.30"
+    a_create_reverse: true
+  - name: "vmhost0"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.225.31"
+    a_create_reverse: true
+  - name: "vmhost1"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.225.32"
+    a_create_reverse: true
+  - name: "vmhost1"
+    state: present
+    record_type: 'AAAA'
+    record_value: "2001:470:e0fc:1::20"
+    aaaa_create_reverse: true
+  - name: "vmhost2"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.225.33"
+    a_create_reverse: true
+  - name: "vmhost2"
+    state: present
+    record_type: 'AAAA'
+    record_value: "2001:470:e0fc:1::21"
+    aaaa_create_reverse: true
+  - name: "vmhost3"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.225.34"
+    a_create_reverse: true
+  - name: "vmhost3"
+    state: present
+    record_type: 'AAAA'
+    record_value: "2001:470:e0fc:1::22"
+    aaaa_create_reverse: true
+  - name: "_ntp._udp"
+    state: present
+    record_type: 'SRV'
+    record_value: "0 100 123 vmhost1.ipa.norme.sh"
+  - name: "_ntp._udp"
+    state: present
+    record_type: 'SRV'
+    record_value: "0 100 123 vmhost2.ipa.norme.sh"
+  - name: "_ntp._udp"
+    state: present
+    record_type: 'SRV'
+    record_value: "0 100 123 vmhost3.ipa.norme.sh"
+  - name: "nas"
+    state: present
+    record_type: 'A'
+    record_value: "192.168.225.126"
+    a_create_reverse: true

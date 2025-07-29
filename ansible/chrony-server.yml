@@ -5,73 +5,73 @@
   become: true
 
   tasks:
-    - name: Install chrony
-      ansible.builtin.package:
-        name: chrony
-        state: present
+  - name: Install chrony
+    ansible.builtin.package:
+      name: chrony
+      state: present
 
 - name: Configure chrony server
   hosts: incus_cluster0_pri,incus_cluster0_sec
   become: true
 
   tasks:
-    - name: Set correct chrony configuration directory - RHEL/Fedora
-      ansible.builtin.set_fact:
-        chrony_conf_dir: /etc
-        chrony_group: 'chrony'
-      when: ansible_os_family == 'RedHat'
+  - name: Set correct chrony configuration directory - RHEL/Fedora
+    ansible.builtin.set_fact:
+      chrony_conf_dir: /etc
+      chrony_group: 'chrony'
+    when: ansible_os_family == 'RedHat'
 
-    - name: Set correct chrony configuration directory - Debian/Ubuntu
-      ansible.builtin.set_fact:
-        chrony_conf_dir: /etc/chrony
-        chrony_group: '_chrony'
-      when: ansible_os_family == 'Debian'
+  - name: Set correct chrony configuration directory - Debian/Ubuntu
+    ansible.builtin.set_fact:
+      chrony_conf_dir: /etc/chrony
+      chrony_group: '_chrony'
+    when: ansible_os_family == 'Debian'
 
-    - name: "Enable chronyd to run in a container"
-      when: ansible_virtualization_type | default("unset") == "lxc"
-      block:
-        - name: "Create systemd override directory for chronyd"
-          ansible.builtin.file:
-            path: /etc/systemd/system/chronyd.service.d
-            state: directory
-            owner: root
-            group: root
-            mode: '0755'
-
-        - name: "Create chronyd override file"
-          ansible.builtin.blockinfile:
-            path: /etc/systemd/system/chronyd.service.d/override.conf
-            create: true
-            owner: root
-            group: root
-            mode: '0644'
-            marker: "# {mark} ANSIBLE MANAGED BLOCK - ENABLE LXC #"
-            block: |
-              [Service]
-              ExecStart=
-              ExecStart=/usr/sbin/chronyd -x $OPTIONS
-          notify:
-            - Reload systemd daemon
-            - Restart chrony
-
-    - name: Install chrony keyfile
-      ansible.builtin.template:
-        src: chrony-keys.j2
-        dest: "{{ (chrony_conf_dir, 'chrony.keys') | path_join }}"
+  - name: "Enable chronyd to run in a container"
+    when: ansible_virtualization_type | default("unset") == "lxc"
+    block:
+    - name: "Create systemd override directory for chronyd"
+      ansible.builtin.file:
+        path: /etc/systemd/system/chronyd.service.d
+        state: directory
         owner: root
-        group: "{{ chrony_group }}"
-        mode: '0640'
-      notify: Restart chrony
+        group: root
+        mode: '0755'
 
-    - name: Install chrony server configuration
-      ansible.builtin.template:
-        src: chrony-server.conf.j2
-        dest: "{{ (chrony_conf_dir, 'chrony.conf') | path_join }}"
+    - name: "Create chronyd override file"
+      ansible.builtin.blockinfile:
+        path: /etc/systemd/system/chronyd.service.d/override.conf
+        create: true
         owner: root
         group: root
         mode: '0644'
-      notify: Restart chrony
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - ENABLE LXC #"
+        block: |
+          [Service]
+          ExecStart=
+          ExecStart=/usr/sbin/chronyd -x $OPTIONS
+      notify:
+      - Reload systemd daemon
+      - Restart chrony
+
+  - name: Install chrony keyfile
+    ansible.builtin.template:
+      src: chrony-keys.j2
+      dest: "{{ (chrony_conf_dir, 'chrony.keys') | path_join }}"
+      owner: root
+      group: "{{ chrony_group }}"
+      mode: '0640'
+    notify: Restart chrony
+
+  - name: Install chrony server configuration
+    ansible.builtin.template:
+      src: chrony-server.conf.j2
+      dest: "{{ (chrony_conf_dir, 'chrony.conf') | path_join }}"
+      owner: root
+      group: root
+      mode: '0644'
+    notify: Restart chrony
 
   handlers:
-    - name: Restart services
-      ansible.builtin.import_tasks: handlers/restarts.yml
+  - name: Restart services
+    ansible.builtin.import_tasks: handlers/restarts.yml

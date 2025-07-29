@@ -1,6 +1,6 @@
-ipaadmin_password: "{{ lookup('onepassword', 'op://CICD-homelab/ipaadmin/password', use_dotenv=true, dotenv_path='../.env') }}"
-ipaadmin_principal: "{{ lookup('onepassword', 'op://CICD-homelab/ipaadmin/username', use_dotenv=true, dotenv_path='../.env') }}"
-ipadm_password: "{{ lookup('onepassword', 'op://CICD-homelab/ipadm/password', use_dotenv=true, dotenv_path='../.env') }}"
+ipaadmin_password: "{{ lookup('ivorynomad.onepassword.onepassword', 'op://CICD-homelab/ipaadmin/password', use_dotenv=true, dotenv_path='../.env') }}"
+ipaadmin_principal: "{{ lookup('ivorynomad.onepassword.onepassword', 'op://CICD-homelab/ipaadmin/username', use_dotenv=true, dotenv_path='../.env') }}"
+ipadm_password: "{{ lookup('ivorynomad.onepassword.onepassword', 'op://CICD-homelab/ipadm/password', use_dotenv=true, dotenv_path='../.env') }}"
 ipaserver_domain: ipa.norme.sh
 ipaserver_realm: IPA.NORME.SH
 ipaserver_setup_dns: true

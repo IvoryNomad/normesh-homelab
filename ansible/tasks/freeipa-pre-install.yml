@@ -1,3 +1,4 @@
+---
 # this is not a playbook
 # these tasks can be imported or included in playbooks, however!
 - name: Remove localhost entries with hostname and FQDN - IPv4

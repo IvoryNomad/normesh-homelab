@@ -2,19 +2,19 @@
 - name: Perform pre-install tasks
   hosts: ipaserver,ipareplica
   tags:
-    - default
-    - install
+  - default
+  - install
 
   tasks:
-    - name: Import pre-install tasks
-      ansible.builtin.import_tasks: tasks/freeipa-pre-install.yml
+  - name: Import pre-install tasks
+    ansible.builtin.import_tasks: tasks/freeipa-pre-install.yml
 
 - name: Import chrony-client playbook
   # TODO: make this a role and call from the play above
   tags:
-    - default
-    - chrony
-    - install
+  - default
+  - chrony
+  - install
   ansible.builtin.import_playbook: chrony-client.yml
 
 - name: Install and configure IPA servers
@@ -22,24 +22,24 @@
   become: true
   gather_facts: true
   tags:
-    - default
-    - install
+  - default
+  - install
 
   roles:
-    - role: freeipa.ansible_freeipa.ipaserver
-      state: present # noqa var-naming[no-role-prefix]
+  - role: freeipa.ansible_freeipa.ipaserver
+    state: present # noqa var-naming[no-role-prefix]
 
 - name: Install and configure IPA replicas
   hosts: ipareplica
   become: true
   gather_facts: true
   tags:
-    - default
-    - install
+  - default
+  - install
 
   roles:
-    - role: freeipa.ansible_freeipa.ipareplica
-      state: present # noqa var-naming[no-role-prefix]
+  - role: freeipa.ansible_freeipa.ipareplica
+    state: present # noqa var-naming[no-role-prefix]
 
 - name: Backup IPA server to controller
   hosts: ipaserver
@@ -52,28 +52,28 @@
     ipabackup_controller_path: "{{ (inventory_dir, 'ipabackup') | path_join }}"
 
   pre_tasks:
-    - name: Ensure backup folder exists
-      delegate_to: localhost
-      become: false
-      ansible.builtin.file:
-        path: "{{ ipabackup_controller_path }}"
-        state: directory
-        mode: '0700'
+  - name: Ensure backup folder exists
+    delegate_to: localhost
+    become: false
+    ansible.builtin.file:
+      path: "{{ ipabackup_controller_path }}"
+      state: directory
+      mode: '0700'
 
-    - name: Add backup folder to .gitignore
-      delegate_to: localhost
-      become: false
-      ansible.builtin.blockinfile:
-        path: "{{ (inventory_dir, '.gitignore') | path_join }}"
-        create: true
-        mode: '0644'
-        marker: "# {mark} ANSIBLE MANAGED BLOCK - IGNORE IPA BACKUPS #"
-        # prepend_newline: true
-        block: "ipabackup/"
+  - name: Add backup folder to .gitignore
+    delegate_to: localhost
+    become: false
+    ansible.builtin.blockinfile:
+      path: "{{ (inventory_dir, '.gitignore') | path_join }}"
+      create: true
+      mode: '0644'
+      marker: "# {mark} ANSIBLE MANAGED BLOCK - IGNORE IPA BACKUPS #"
+      # prepend_newline: true
+      block: "ipabackup/"
 
   roles:
-    - role: freeipa.ansible_freeipa.ipabackup
-      state: present # noqa var-naming[no-role-prefix]
+  - role: freeipa.ansible_freeipa.ipabackup
+    state: present # noqa var-naming[no-role-prefix]
 
 - name: Remove IPA replicas
   hosts: ipareplica
@@ -81,5 +81,5 @@
   tags: remove_replica
 
   roles:
-    - role: freeipa.ansible_freeipa.ipareplica
-      state: absent # noqa var-naming[no-role-prefix]
+  - role: freeipa.ansible_freeipa.ipareplica
+    state: absent # noqa var-naming[no-role-prefix]

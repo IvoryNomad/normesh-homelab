@@ -5,49 +5,61 @@
   become: true
 
   tasks:
-    - name: Create template unit file
-      ansible.builtin.copy:
-        dest: /etc/systemd/system/pcie-cap-fix@.service
-        content: |
-          [Unit]
-          Description=Disable PCIe capability bit for device %i
-          After=local-fs.target
-          Before=sysinit.target
+  - name: Create template unit file
+    ansible.builtin.copy:
+      dest: /etc/systemd/system/pcie-cap-fix@.service
+      content: |
+        [Unit]
+        Description=Disable PCIe capability bit for device %i
+        After=local-fs.target
+        Before=sysinit.target
 
-          [Service]
-          Type=oneshot
-          ExecStart=/bin/sh -c 'setpci -s %i CAP_EXP+0x8.w=$(printf "0x%%x\\n" $((0x$(setpci -s %i CAP_EXP+0x8.w) & ~0x0001)))'
-          RemainAfterExit=yes
-          StandardOutput=journal
-        owner: root
-        group: root
-        mode: '0644'
-      notify: Reload systemd daemon
+        [Service]
+        Type=oneshot
+        ExecStart=/bin/sh -c "'" + "{{ exec_parts | join(' ') }}" + "'"
+        RemainAfterExit=yes
+        StandardOutput=journal
+      owner: root
+      group: root
+      mode: '0644'
+    notify: Reload systemd daemon
+    vars:
+      exec_parts:
+      - 'setpci'
+      - '%i'
+      - 'CAP_EXP+0x8.w=$(printf'
+      - '"0x%%x\\n"'
+      - '$((0x$(setpci'
+      - '-s'
+      - '%i'
+      - 'CAP_EXP+0x8.w'
+      - '&'
+      - '~0x0001)))'
 
-    - name: Flush handlers
-      ansible.builtin.meta: flush_handlers
-      when: ansible_facts['systemd'] is defined
+  - name: Flush handlers
+    ansible.builtin.meta: flush_handlers
+    when: ansible_facts['systemd'] is defined
 
-    - name: Set fact - Identify PCI Starship/Matisse GPP Bridge IDs
-      # Note: this task is specific to the AsRockRack RomeD8-2T system board
-      ansible.builtin.shell: |
-        set -o pipefail
-        lspci -D | grep 'Starship/Matisse GPP Bridge' | awk '{print $1}' | sort -u
-      args:
-        executable: /bin/bash
-      register: lspci_out
-      changed_when: false
-      failed_when: lspci_out.rc != 0 and lspci_out.stderr != ''
+  - name: Set fact - Identify PCI Starship/Matisse GPP Bridge IDs
+    # Note: this task is specific to the AsRockRack RomeD8-2T system board
+    ansible.builtin.shell: |
+      set -o pipefail
+      lspci -D | grep 'Starship/Matisse GPP Bridge' | awk '{print $1}' | sort -u
+    args:
+      executable: /bin/bash
+    register: lspci_out
+    changed_when: false
+    failed_when: lspci_out.rc != 0 and lspci_out.stderr != ''
 
-    - name: Enable and start systemd unit template instances
-      ansible.builtin.systemd:
-        name: "pcie-cap-fix@{{ item }}.service"
-        enabled: true
-        state: started
-      loop: "{{ lspci_out.stdout_lines | default([]) }}"
-      when: lspci_out.stdout_lines is defined and lspci_out.stdout_lines | length > 0
+  - name: Enable and start systemd unit template instances
+    ansible.builtin.systemd:
+      name: "pcie-cap-fix@{{ item }}.service"
+      enabled: true
+      state: started
+    loop: "{{ lspci_out.stdout_lines | default([]) }}"
+    when: lspci_out.stdout_lines is defined and lspci_out.stdout_lines | length > 0
 
   handlers:
-    - name: Reload systemd daemon
-      ansible.builtin.systemd:
-        daemon_reload: true
+  - name: Reload systemd daemon
+    ansible.builtin.systemd:
+      daemon_reload: true

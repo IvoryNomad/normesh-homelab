@@ -2,32 +2,32 @@
 - name: Perform pre-install tasks
   hosts: ipaserver,ipareplica
   tags:
-    - default
-    - install
+  - default
+  - install
 
   pre_tasks:
-    - name: Fix /etc/resolv.conf
-      ansible.builtin.copy:
-        dest: /etc/resolv.conf
-        owner: root
-        group: root
-        mode: '0644'
-        content: |-
-          domain ipa.norme.sh
-          search ipa.norme.sh
-          nameserver 192.168.225.32
-          nameserver 192.168.225.33
-          nameserver 192.168.225.34
+  - name: Fix /etc/resolv.conf
+    ansible.builtin.copy:
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: '0644'
+      content: |-
+        domain ipa.norme.sh
+        search ipa.norme.sh
+        nameserver 192.168.225.32
+        nameserver 192.168.225.33
+        nameserver 192.168.225.34
 
   tasks:
-    - name: Import pre-install tasks
-      ansible.builtin.import_tasks: tasks/freeipa-pre-install.yml
+  - name: Import pre-install tasks
+    ansible.builtin.import_tasks: tasks/freeipa-pre-install.yml
 
 - name: Import chrony-client playbook
   tags:
-    - default
-    - chrony
-    - install
+  - default
+  - chrony
+  - install
   ansible.builtin.import_playbook: chrony-client.yml
 
 - name: Install and configure IPA client
@@ -35,20 +35,20 @@
   become: true
   gather_facts: true
   tags:
-    - default
-    - install
+  - default
+  - install
 
   roles:
-    - role: freeipa.ansible_freeipa.ipaclient
-      state: present # noqa var-naming[no-role-prefix]
+  - role: freeipa.ansible_freeipa.ipaclient
+    state: present # noqa var-naming[no-role-prefix]
 
 - name: Remove IPA client
   hosts: ipaclient
   become: true
   gather_facts: true
   tags:
-    - remove
+  - remove
 
   roles:
-    - role: freeipa.ansible_freeipa.ipaclient
-      state: absent # noqa var-naming[no-role-prefix]
+  - role: freeipa.ansible_freeipa.ipaclient
+    state: absent # noqa var-naming[no-role-prefix]

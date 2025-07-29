@@ -3,9 +3,9 @@
   hosts: ipaserver
   become: true
   tags:
-    - default
-    - install
-    - create_dns
+  - default
+  - install
+  - create_dns
 
   vars:
     ipa_auth: &ipa_auth
@@ -13,47 +13,47 @@
       ipaadmin_principal: "{{ ipaadmin_principal }}"
 
   tasks:
-    - name: Include DNS variables
-      ansible.builtin.include_vars:
-        file: vars/create_dns.yml
-        name: cfg
+  - name: Include DNS variables
+    ansible.builtin.include_vars:
+      file: vars/create_dns.yml
+      name: cfg
 
-    - name: Create forward zones
-      freeipa.ansible_freeipa.ipadnszone:
-        <<: *ipa_auth
-        state: present
-        name: "{{ item }}"
-      loop: "{{ cfg.ipa_forward_zones }}"
+  - name: Create forward zones
+    freeipa.ansible_freeipa.ipadnszone:
+      <<: *ipa_auth
+      state: present
+      name: "{{ item }}"
+    loop: "{{ cfg.ipa_forward_zones }}"
 
-    - name: Create reverse zones
-      freeipa.ansible_freeipa.ipadnszone:
-        <<: *ipa_auth
-        state: present
-        name_from_ip: "{{ item }}"
-      loop: "{{ cfg.ipa_reverse_networks }}"
+  - name: Create reverse zones
+    freeipa.ansible_freeipa.ipadnszone:
+      <<: *ipa_auth
+      state: present
+      name_from_ip: "{{ item }}"
+    loop: "{{ cfg.ipa_reverse_networks }}"
 
-    - name: Create DNS RRs
-      freeipa.ansible_freeipa.ipadnsrecord:
-        <<: *ipa_auth
-        zone_name: "{{ item.0.key }}"
-        name: "{{ item.1.name }}"
-        state: "{{ item.1.state }}"
-        a_rec: "{{ (item.1.record_type == 'A') | ternary(item.1.record_value, omit) }}"
-        ptr_rec: "{{ (item.1.record_type == 'PTR') | ternary(item.1.record_value, omit) }}"
-        srv_rec: "{{ (item.1.record_type == 'SRV') | ternary(item.1.record_value, omit) }}"
-        aaaa_rec: "{{ (item.1.record_type == 'AAAA') | ternary(item.1.record_value, omit) }}"
-        cname_rec: "{{ (item.1.record_type == 'CNAME') | ternary(item.1.record_value, omit) }}"
-        mx_rec: "{{ (item.1.record_type == 'MX') | ternary(item.1.record_value, omit) }}"
-        txt_rec: "{{ (item.1.record_type == 'TXT') | ternary(item.1.record_value, omit) }}"
-        a_create_reverse: "{{ item.1.a_create_reverse | default(omit) }}"
-        aaaa_create_reverse: "{{ item.1.aaaa_create_reverse | default(omit) }}"
-      vars:
-        record_type_map:
-          A: "a_rec"
-          PTR: "ptr_rec"
-          SRV: "srv_rec"
-          AAAA: "aaaa_rec"
-          CNAME: "cname_rec"
-          MX: "mx_rec"
-          TXT: "txt_rec"
-      loop: "{{ cfg.ipa_dns_records | dict2items | subelements('value') }}"
+  - name: Create DNS RRs
+    freeipa.ansible_freeipa.ipadnsrecord:
+      <<: *ipa_auth
+      zone_name: "{{ item.0.key }}"
+      name: "{{ item.1.name }}"
+      state: "{{ item.1.state }}"
+      a_rec: "{{ (item.1.record_type == 'A') | ternary(item.1.record_value, omit) }}"
+      ptr_rec: "{{ (item.1.record_type == 'PTR') | ternary(item.1.record_value, omit) }}"
+      srv_rec: "{{ (item.1.record_type == 'SRV') | ternary(item.1.record_value, omit) }}"
+      aaaa_rec: "{{ (item.1.record_type == 'AAAA') | ternary(item.1.record_value, omit) }}"
+      cname_rec: "{{ (item.1.record_type == 'CNAME') | ternary(item.1.record_value, omit) }}"
+      mx_rec: "{{ (item.1.record_type == 'MX') | ternary(item.1.record_value, omit) }}"
+      txt_rec: "{{ (item.1.record_type == 'TXT') | ternary(item.1.record_value, omit) }}"
+      a_create_reverse: "{{ item.1.a_create_reverse | default(omit) }}"
+      aaaa_create_reverse: "{{ item.1.aaaa_create_reverse | default(omit) }}"
+    vars:
+      record_type_map:
+        A: "a_rec"
+        PTR: "ptr_rec"
+        SRV: "srv_rec"
+        AAAA: "aaaa_rec"
+        CNAME: "cname_rec"
+        MX: "mx_rec"
+        TXT: "txt_rec"
+    loop: "{{ cfg.ipa_dns_records | dict2items | subelements('value') }}"

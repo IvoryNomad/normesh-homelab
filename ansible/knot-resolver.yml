@@ -6,105 +6,114 @@
 
   vars:
     knot_services:
-      - kres-cache-gc
-      - kresd@dns1
-      - kresd@dns2
+    - kres-cache-gc
+    - kresd@dns1
+    - kresd@dns2
 
   tasks:
-    - name: Enable cznic-labs repository
-      block:
-        - name: Install dependencies
-          ansible.builtin.package:
-            name:
-              - apt-transport-https
-              - ca-certificates
-            state: present
-
-        - name: Add cznic-labs GPG key
-          ansible.builtin.get_url:
-            url: https://pkg.labs.nic.cz/gpg
-            dest: /usr/share/keyrings/cznic-labs-pkg.gpg
-            checksum: "sha256:e82408f6c31b994e896f9c4244fa73bf92a10435289cab1f5ef5b619adae6482"
-            mode: '0644'
-            owner: root
-            group: root
-
-        - name: Add cznic-labs repository
-          ansible.builtin.apt_repository:
-            filename: cznic-labs-knot-resolver
-            repo: "deb [signed-by=/usr/share/keyrings/cznic-labs-pkg.gpg] https://pkg.labs.nic.cz/knot-resolver bookworm main"
-            state: present
-            install_python_apt: true
-            update_cache: true
-
-    - name: Install knot-resolver
+  - name: Enable cznic-labs repository
+    block:
+    - name: Install dependencies
       ansible.builtin.package:
         name:
-          - knot-resolver
-          - knot-dnsutils
+        - apt-transport-https
+        - ca-certificates
         state: present
 
-    - name: Gather mount facts
-      ansible.builtin.mount_facts:
-        include_aggregate_mounts: false
-
-    - name: Register if cache is mounted as tmpfs
-      ansible.builtin.set_fact:
-        is_cache_tmpfs: "{{ '/var/cache/knot-resolver' in ansible_facts.mount_points.keys() and ansible_facts.mount_points['/var/cache/knot-resolver'].fstype == 'tmpfs' }}" # noqa yaml[line-length]
-
-    - name: Gather service facts
-      ansible.builtin.service_facts:
-
-    - name: Stop service if running
-      ansible.builtin.systemd_service:
-        name: "{{ item }}"
-        state: stopped
-      loop: "{{ knot_services }}"
-      when: not is_cache_tmpfs and ansible_facts.services[item] is defined and ansible_facts.services[item].state == 'running'
-
-    - name: Clean cache directory
-      ansible.builtin.file:
-        path: /var/cache/knot-resolver
-        state: absent
-      when: not is_cache_tmpfs
-
-    - name: Ensure cache directory exists
-      ansible.builtin.file:
-        path: /var/cache/resolver
-        state: directory
-        mode: '0755'
-      when: not is_cache_tmpfs
-
-    - name: Mount cache filesystem
-      ansible.posix.mount:
-        path: /var/cache/knot-resolver
-        src: tmpfs
-        fstype: tmpfs
-        opts: "rw,size=256M,uid=knot-resolver,gid=knot-resolver,nosuid,nodev,noexec,mode=0700"
-        state: mounted
-      when: not is_cache_tmpfs
-      notify: Restart knot-resolver-all
-
-    - name: Configure knot-resolver
-      ansible.builtin.template:
-        src: kresd.conf.j2
-        dest: /etc/knot-resolver/kresd.conf
+    - name: Add cznic-labs GPG key
+      ansible.builtin.get_url:
+        url: https://pkg.labs.nic.cz/gpg
+        dest: /usr/share/keyrings/cznic-labs-pkg.gpg
+        checksum: "sha256:e82408f6c31b994e896f9c4244fa73bf92a10435289cab1f5ef5b619adae6482"
+        mode: '0644'
         owner: root
         group: root
-        mode: '0644'
-      notify: Restart knot-resolver
 
-    - name: Configure system to use local DNS cache
-      ansible.builtin.copy:
-        dest: /etc/resolv.conf
-        owner: root
-        group: root
-        mode: '0644'
-        content: |
-          domain ipa.norme.sh
-          search ipa.norme.sh
-          nameserver 127.0.0.1
+    - name: Add cznic-labs repository
+      ansible.builtin.apt_repository:
+        filename: cznic-labs-knot-resolver
+        repo: "{{ repo_parts | join(' ') }}"
+        state: present
+        install_python_apt: true
+        update_cache: true
+      vars:
+        repo_parts:
+        - 'deb'
+        - '[signed-by=/usr/share/keyrings/cznic-labs-pkg.gpg]'
+        - 'https://pkg.labs.nic.cz/knot-resolver'
+        - 'bookworm'
+        - 'main'
+
+  - name: Install knot-resolver
+    ansible.builtin.package:
+      name:
+      - knot-resolver
+      - knot-dnsutils
+      state: present
+
+  - name: Gather mount facts
+    ansible.builtin.mount_facts:
+      include_aggregate_mounts: false
+
+  - name: Register if cache is mounted as tmpfs
+    ansible.builtin.set_fact:
+      is_cache_tmpfs: "{{ '/var/cache/knot-resolver' in ansible_facts.mount_points.keys() and
+                        ansible_facts.mount_points['/var/cache/knot-resolver'].fstype == 'tmpfs' }}"
+
+  - name: Gather service facts
+    ansible.builtin.service_facts:
+
+  - name: Stop service if running
+    ansible.builtin.systemd_service:
+      name: "{{ item }}"
+      state: stopped
+    loop: "{{ knot_services }}"
+    when: not is_cache_tmpfs and ansible_facts.services[item] is defined and
+            ansible_facts.services[item].state == 'running'
+
+  - name: Clean cache directory
+    ansible.builtin.file:
+      path: /var/cache/knot-resolver
+      state: absent
+    when: not is_cache_tmpfs
+
+  - name: Ensure cache directory exists
+    ansible.builtin.file:
+      path: /var/cache/resolver
+      state: directory
+      mode: '0755'
+    when: not is_cache_tmpfs
+
+  - name: Mount cache filesystem
+    ansible.posix.mount:
+      path: /var/cache/knot-resolver
+      src: tmpfs
+      fstype: tmpfs
+      opts: "rw,size=256M,uid=knot-resolver,gid=knot-resolver,nosuid,nodev,noexec,mode=0700"
+      state: mounted
+    when: not is_cache_tmpfs
+    notify: Restart knot-resolver-all
+
+  - name: Configure knot-resolver
+    ansible.builtin.template:
+      src: kresd.conf.j2
+      dest: /etc/knot-resolver/kresd.conf
+      owner: root
+      group: root
+      mode: '0644'
+    notify: Restart knot-resolver
+
+  - name: Configure system to use local DNS cache
+    ansible.builtin.copy:
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: '0644'
+      content: |
+        domain ipa.norme.sh
+        search ipa.norme.sh
+        nameserver 127.0.0.1
 
   handlers:
-    - name: Restart services
-      ansible.builtin.import_tasks: handlers/restarts.yml
+  - name: Restart services
+    ansible.builtin.import_tasks: handlers/restarts.yml
