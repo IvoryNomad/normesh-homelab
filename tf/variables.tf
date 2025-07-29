@@ -2,7 +2,7 @@
 variable "proxmox_api_url" {
   description = "Proxmox API URL"
   type        = string
-  default     = "https://pve-lab.idm.norme.sh:8006/api2/json"
+  default     = "https://pve-lab.ipa.norme.sh:8006/api2/json"
 }
 
 variable "pm_tls_insecure" {

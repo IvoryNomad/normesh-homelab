@@ -1,4 +1,4 @@
-# freeipa-vars.tf
+# vars-freeipa.tf
 
 locals {
   ipa_servers = {
