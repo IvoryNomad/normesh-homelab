@@ -1,0 +1,42 @@
+block-beta
+columns 4
+  network("Ethernet"):4
+  space:4
+  eth0["enp1s0f0"]:2
+  eth1["enp1s0f1"]:2
+  bond0:4
+  vlan10["bond0.10"]
+  vlan20["bond0.20"]
+  vlan21["bond0.21"]
+  vlan30["bond0.30"]
+  vmbr10
+  vmbr20
+  vmbr21
+  vmbr30
+  block:vms10
+    a10["vm"]
+    b10["vm"]
+    c10["vm"]
+    d10["..."]
+  end
+  block:vms20
+    a20["vm"]
+    b20["vm"]
+    c20["vm"]
+    d20["..."]
+  end
+  block:vms21
+    a21["vm"]
+    b21["vm"]
+    c21["vm"]
+    d21["..."]
+  end
+  block:vms30
+    a30["vm"]
+    b30["vm"]
+    c30["vm"]
+    d30["..."]
+  end
+
+eth0-->network
+eth1-->network

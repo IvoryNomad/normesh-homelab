@@ -1,0 +1,31 @@
+block-beta
+columns 4
+  label1["hostname"]
+  pve0["pve-lab"]:3
+  label3["instances"]
+  block:instances0:3
+    columns 2
+    998["netbox"]
+    999["iachost"]
+  end
+  label4["templates"]
+  block:templates0:3
+    columns 1
+    9900["debian-bookworm-zfsroot"]
+    9901["alma9-template"]
+  end
+%% using a class here doesn't work in the editor
+%% as the color directive sets color for every object
+style label1 fill:#6e6ce6,color:#fff
+%% style label2 fill:#6e6ce6,color:#fff
+style label3 fill:#6e6ce6,color:#fff
+style label4 fill:#6e6ce6,color:#fff
+classDef lxc fill:#92d49f
+classDef vm_tmpl fill:#b0b0b0,stroke:#4f4f4f
+classDef vm fill:#92cdd4
+class 998 lxc
+class 999 vm
+class 9000 vm_tmpl
+class 9100 vm_tmpl
+class 9900 vm_tmpl
+class 9901 vm_tmpl

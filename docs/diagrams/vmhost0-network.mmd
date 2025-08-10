@@ -1,0 +1,21 @@
+block-beta
+columns 2
+  network("Ethernet"):2
+  space:2
+  eth0["enp1s0"]
+  eth1["enp2s0"]
+  bond0:2
+  vlan20
+  vlan21
+  space
+  vmbr21
+  space
+  block:vms
+    a["vm"]
+    b["vm"]
+    c["vm"]
+    d["..."]
+  end
+
+eth0-->network
+eth1-->network

@@ -1,0 +1,45 @@
+block-beta
+  columns 11
+  inet["Internet"]:11
+  space:11
+  space:5 fw["gateway"] space:5
+  space:11
+  space:4 sw0["core-sw01"]:3 space:4
+  space:11
+  sw1["USW Pro 24 PoE"]:4 sw2["USW 24PoE"]:2 sw3["2.5G switch"]:4 pve["pve-lab"]
+  space:11
+  ap0["U6 LR"] ap1["U6 Lite upstairs"] ap2["U6 Lite den"] unvr["UNVR"] space:2 vmhost0 vmhost1 vmhost2 vmhost3 space
+  fw-->inet
+  sw0-->fw
+  sw1-->sw0
+  sw2-->sw0
+  sw3-->sw0
+  pve-->sw0
+  ap0-->sw1
+  ap1-->sw1
+  ap2-->sw1
+  unvr-->sw1
+
+  vmhost0-->sw3 
+  vmhost1-->sw3
+  vmhost2-->sw3
+  vmhost3-->sw3
+
+classDef host fill:#0015ff,color:#fff
+classDef switch fill:#00ff15
+classDef wifi fill:#aa00ff,color:#fff
+
+class fw host
+class sw0 switch
+class sw1 switch
+class sw2 switch
+class sw3 switch
+class pve-lab host
+class ap0 wifi
+class ap1 wifi
+class ap2 wifi
+class unvr host
+class vmhost0 host
+class vmhost1 host
+class vmhost2 host
+class vmhost3 host

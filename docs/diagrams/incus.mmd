@@ -1,0 +1,49 @@
+block-beta
+columns 5
+  label1["hostname"]
+  vmhost0
+  cluster0:3
+  label2["cluster members"]
+  space
+  block:cluster["cluster0"]:3
+    vmhost1
+    vmhost2
+    vmhost3
+  end
+  label3["instances"]
+  block:instances0
+    columns 2
+    i0a["alma-mgmt"]
+    i0b["isobuilder-vm"]
+    i0c["pbs"]
+  end
+  block:instances1
+    columns 2
+    i1a["ipa1"] space space
+  end
+  block:instances2
+    columns 2
+    i2a["ipa1"] 
+    space 
+    space
+  end
+  block:instances3
+    columns 2
+    i3a["ipa1"] 
+    space
+    space
+  end
+%% using a class here doesn't work in the editor
+%% as the color directive sets color for every object
+style label1 fill:#6e6ce6,color:#fff
+style label2 fill:#6e6ce6,color:#fff
+style label3 fill:#6e6ce6,color:#fff
+classDef lxc fill:#92d49f
+classDef oci fill:#d1bef7
+classDef vm fill:#92cdd4
+class i0a lxc
+class i0b vm
+class i0c vm
+class i1a lxc
+class i2a lxc
+class i3a lxc
