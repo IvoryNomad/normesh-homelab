@@ -1,0 +1,7 @@
+[Unit]
+Description=Restart Knot Resolver %i service
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl restart kresd@%i.service

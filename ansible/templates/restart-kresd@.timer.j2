@@ -1,0 +1,13 @@
+[Unit]
+Description=Weekly restart of Knot Resolver %i
+Requires=restart-kresd@%i.service
+
+[Timer]
+# Will need to be overridden per instance for staggered timing
+OnCalendar=Sun *-*-* 06:00:00
+AccuracySec=1us
+RandomizedDelaySec=1800
+Persistent=true
+
+[Install]
+WantedBy=timers.target

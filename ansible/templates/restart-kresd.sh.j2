@@ -1,0 +1,7 @@
+#!/bin/sh
+
+INSTANCES="{{ knot_instantiated_services | join(' ') }}"
+
+for I in $INSTANCES; do 
+  systemctl restart $I
+done
