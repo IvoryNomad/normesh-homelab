@@ -1,0 +1,26 @@
+global_defs {
+   router_id {{ ansible_hostname }}
+   script_user root
+   enable_script_security
+}
+{% for cfg in keepalived_config.values() %}
+vrrp_instance {{ cfg.ka_instance }} {
+    state {{ cfg.ka_state }}
+    interface {{ cfg.ka_ifname }}
+    virtual_router_id {{ cfg.ka_vr_id }}
+    priority {{ cfg.ka_prio }}
+    advert_int {{ cfg.ka_adv_int }}
+    authentication {
+        auth_type PASS
+        auth_pass {{ cfg.ka_pass }}
+    }
+    virtual_ipaddress {
+        {{ cfg.ka_vip }}
+    }
+{% if cfg.ka_notify_master is defined and cfg.ka_notify_master_args is defined %}
+    notify_master "{{ cfg.ka_notify_master }} {{ cfg.ka_notify_master_args }}"
+{% elif cfg.ka_notify_master is defined %}
+    notify_master {{ cfg.ka_notify_master }}
+{% endif %}
+}
+{% endfor %}

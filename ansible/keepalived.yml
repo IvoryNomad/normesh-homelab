@@ -1,0 +1,33 @@
+---
+- name: Install keepalived
+  hosts: incus_cluster0_pri,incus_cluster0_sec,dns_backup
+  gather_facts: true
+  become: true
+
+  tasks:
+  - name: Install keepalived package
+    ansible.builtin.package:
+      name:
+      - keepalived
+      state: present
+
+  - name: Configure keepalived options
+    ansible.builtin.lineinfile:
+      path: /etc/default/keepalived
+      regexp: '^DAEMON_ARGS='
+      state: present
+      line: 'DAEMON_ARGS="-P"'
+    notify: Restart keepalived
+
+  - name: Configure keepalived
+    ansible.builtin.template:
+      src: keepalived.conf.j2
+      dest: /etc/keepalived/keepalived.conf
+      owner: root
+      group: root
+      mode: '0600'
+    notify: Restart keepalived
+
+  handlers:
+  - name: Restart services
+    ansible.builtin.import_tasks: handlers/restarts.yml
