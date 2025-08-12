@@ -1,0 +1,21 @@
+keepalived_config:
+  kresd:
+    ka_instance: "KRESD"
+    ka_state: "MASTER"
+    ka_ifname: "vlan20"
+    ka_vr_id: 3
+    ka_prio: 100
+    ka_adv_int: 1
+    ka_pass: "aba03cab"
+    ka_vip: 192.168.225.4
+    ka_notify_master: "/usr/local/bin/restart-kresd.sh"
+    ka_notify_backup: "/usr/local/bin/restart-kresd.sh"
+  incus:
+    ka_instance: "INCUS_CL0"
+    ka_state: "BACKUP"
+    ka_ifname: "vlan20"
+    ka_vr_id: 20
+    ka_prio: 90
+    ka_adv_int: 1
+    ka_pass: "aba20cab"
+    ka_vip: 192.168.225.35
