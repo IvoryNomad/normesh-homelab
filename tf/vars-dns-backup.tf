@@ -1,7 +1,7 @@
 # vars-proxmox.tf
 
 locals {
-  proxmox_cloned_vms = {
+  dns_backup_vms = {
     dns-backup1 = {
       vm_id             = 1000
       tags              = []
@@ -12,7 +12,7 @@ locals {
       cpu_type          = "x86-64-v3"
       mem_dedicated     = 1024
       mem_floating      = 512
-      net_dev           = "vmbr21"
+      net_dev           = "vmbr20"
       image_datastore   = "tank"
       snippet_datastore = "local"
 
@@ -21,12 +21,12 @@ locals {
       hostname  = "dns-backup1"
       fqdn      = "dns-backup1.ipa.norme.sh"
       ifname    = "ens18"
-      ipv4_addr = "192.168.226.32"
+      ipv4_addr = "192.168.225.5"
       ipv4_mask = "24"
-      ipv4_gw   = "192.168.226.1"
-      ipv6_addr = "2001:470:e0fc:2::20"
+      ipv4_gw   = "192.168.225.1"
+      ipv6_addr = "2001:470:e0fc:1::5"
       ipv6_mask = "64"
-      ipv6_gw   = "2001:470:e0fc:2::1"
+      ipv6_gw   = "2001:470:e0fc:1::1"
 
       # needs to at least be defined as an empty list?
       local_users = []
@@ -45,7 +45,7 @@ locals {
       cpu_type          = "x86-64-v3"
       mem_dedicated     = 1024
       mem_floating      = 512
-      net_dev           = "vmbr21"
+      net_dev           = "vmbr20"
       image_datastore   = "tank"
       snippet_datastore = "local"
 
@@ -54,12 +54,12 @@ locals {
       hostname  = "dns-backup2"
       fqdn      = "dns-backup2.ipa.norme.sh"
       ifname    = "ens18"
-      ipv4_addr = "192.168.226.33"
+      ipv4_addr = "192.168.225.6"
       ipv4_mask = "24"
-      ipv4_gw   = "192.168.226.1"
-      ipv6_addr = "2001:470:e0fc:2::21"
+      ipv4_gw   = "192.168.225.1"
+      ipv6_addr = "2001:470:e0fc:1::6"
       ipv6_mask = "64"
-      ipv6_gw   = "2001:470:e0fc:2::1"
+      ipv6_gw   = "2001:470:e0fc:1::1"
 
       # needs to at least be defined as an empty list?
       local_users = []
@@ -78,7 +78,7 @@ locals {
       cpu_type          = "x86-64-v3"
       mem_dedicated     = 1024
       mem_floating      = 512
-      net_dev           = "vmbr21"
+      net_dev           = "vmbr20"
       image_datastore   = "tank"
       snippet_datastore = "local"
 
@@ -87,12 +87,12 @@ locals {
       hostname  = "dns-backup3"
       fqdn      = "dns-backup3.ipa.norme.sh"
       ifname    = "ens18"
-      ipv4_addr = "192.168.226.34"
+      ipv4_addr = "192.168.225.7"
       ipv4_mask = "24"
-      ipv4_gw   = "192.168.226.1"
-      ipv6_addr = "2001:470:e0fc:2::22"
+      ipv4_gw   = "192.168.225.1"
+      ipv6_addr = "2001:470:e0fc:1::7"
       ipv6_mask = "64"
-      ipv6_gw   = "2001:470:e0fc:2::1"
+      ipv6_gw   = "2001:470:e0fc:1::1"
 
       # needs to at least be defined as an empty list?
       local_users = []
