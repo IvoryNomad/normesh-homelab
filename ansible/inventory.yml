@@ -1,4 +1,15 @@
 ---
+dns_backup:
+  hosts:
+    dns-backup1.ipa.norme.sh:
+      ansible_host: 192.168.225.5
+      ansible_user: localadmin
+    dns-backup2.ipa.norme.sh:
+      ansible_host: 192.168.225.6
+      ansible_user: localadmin
+    dns-backup3.ipa.norme.sh:
+      ansible_host: 192.168.225.7
+      ansible_user: localadmin
 ipaclient:
   hosts:
     alma-mgmt.ipa.norme.sh:
@@ -65,3 +76,11 @@ pbs_server:
     pbs.ipa.norme.sh:
       ansible_host: 192.168.226.30
       ansible_user: localadmin
+phys_host:
+  hosts:
+    nas.ipa.norme.sh:
+    pve-lab.ipa.norme.sh:
+    vmhost0.ipa.norme.sh:
+    vmhost1.ipa.norme.sh:
+    vmhost2.ipa.norme.sh:
+    vmhost3.ipa.norme.sh:
