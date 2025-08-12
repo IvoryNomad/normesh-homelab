@@ -1,0 +1,34 @@
+---
+- name: Fix cloud-init silliness
+  hosts: all
+  gather_facts: false
+  become: true
+
+  vars:
+    dns_domain: ipa.norme.sh
+    dns_search:
+    - ipa.norme.sh
+    dns_servers:
+    - 192.168.225.32
+    - 192.168.225.33
+    - 192.168.225.34
+
+  tasks:
+  - name: Stop systemd-resolved
+    ansible.builtin.systemd_service:
+      name: systemd-resolved
+      state: stopped
+
+  - name: Nuke systemd-resolved
+    ansible.builtin.systemd_service:
+      name: systemd-resolved
+      enabled: false
+      masked: true
+
+  - name: Fix /etc/resolv.conf
+    ansible.builtin.template:
+      src: resolv.conf.j2
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: '0644'
