@@ -1,12 +1,13 @@
 ---
 - name: Install knot-resolver
-  hosts: incus_cluster0_pri,incus_cluster0_sec
+  hosts: incus_cluster0_pri,incus_cluster0_sec,dns_backup
   gather_facts: true
   become: true
 
   vars:
-    knot_services:
+    knot_core_services:
     - kres-cache-gc
+    knot_instantiated_services:
     - kresd@dns1
     - kresd@dns2
 
@@ -65,9 +66,9 @@
 
   - name: Stop service if running
     ansible.builtin.systemd_service:
-      name: "{{ item }}"
+      name: "{{ item }}.service"
       state: stopped
-    loop: "{{ knot_services }}"
+    loop: "{{ knot_core_services + knot_instantiated_services }}"
     when: not is_cache_tmpfs and ansible_facts.services[item] is defined and
             ansible_facts.services[item].state == 'running'
 
@@ -103,6 +104,12 @@
       mode: '0644'
     notify: Restart knot-resolver
 
+  - name: Enable knot-resolver instances
+    ansible.builtin.systemd_service:
+      name: "{{ item }}.service"
+      enabled: true
+    loop: "{{ knot_instantiated_services }}"
+
   - name: Configure system to use local DNS cache
     ansible.builtin.copy:
       dest: /etc/resolv.conf
@@ -114,6 +121,41 @@
         search ipa.norme.sh
         nameserver 127.0.0.1
 
+  - name: Create service template for kresd restarts
+    ansible.builtin.template:
+      src: restart-kresd@.service.j2
+      dest: /etc/systemd/system/restart-kresd@.service
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Create timer template for kresd restarts
+    ansible.builtin.template:
+      src: restart-kresd@.timer.j2
+      dest: /etc/systemd/system/restart-kresd@.timer
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Enable knot-resolver restart instances
+    ansible.builtin.systemd_service:
+      daemon_reload: true
+      name: "restart-{{ item }}.timer"
+      enabled: true
+      state: started
+    loop: "{{ knot_instantiated_services }}"
+
+  - name: Create kresd keepalived notify script
+    ansible.builtin.template:
+      src: restart-kresd.sh.j2
+      dest: /usr/local/bin/restart-kresd.sh
+      owner: root
+      group: root
+      mode: '0700'
+
   handlers:
   - name: Restart services
     ansible.builtin.import_tasks: handlers/restarts.yml
+
+- name: Import keepalived playbook
+  ansible.builtin.import_playbook: keepalived.yml
