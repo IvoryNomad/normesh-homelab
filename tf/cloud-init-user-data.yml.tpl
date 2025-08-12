@@ -1,6 +1,6 @@
 #cloud-config
-bootcmd:
 %{ if bootcmds != [] ~}
+bootcmd:
 %{ for bcmd in bootcmds ~}
   - ${bcmd}
 %{ endfor ~}
